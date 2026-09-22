@@ -78,6 +78,7 @@ Build the production website behind the provisional static site using Astro, San
 
 ## Work unit 1 evidence
 
+- Work-unit commit: `3e3e7eebe32be18573a90d6c89645eafa0c3e6a4` (`feat(site): scaffold Astro and Sanity foundation`).
 - `npm install` completed successfully with exit code 0. The final install audited the dependency tree; npm reported existing upstream audit warnings and no install blocker.
 - `npm run check` completed successfully with `0 errors`, `0 warnings`, and `0 hints`.
 - `npm run build` completed successfully with static output and 2 pages built: `/index.html` and `/studio/index.html`. Sitemap generation was skipped, as expected, because `PUBLIC_SITE_URL` is intentionally unset.
