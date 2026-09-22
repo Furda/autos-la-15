@@ -1,0 +1,18 @@
+# Environment variables — never commit
+.env
+.env.*
+
+# Dependencies
+node_modules/
+
+# Build output
+dist/
+.astro/
+
+# Sanity
+.sanity/
+
+# Logs & OS
+*.log
+.DS_Store
+Thumbs.db

@@ -1,0 +1,44 @@
+---
+import { sanityClient } from 'sanity:client';
+import '../styles/global.css';
+
+const sanityProjectId = sanityClient.config().projectId;
+---
+
+<!doctype html>
+<html lang="es" data-sanity-configured={Boolean(sanityProjectId)}>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width" />
+    <meta name="description" content="Autos La 15, compra y vende vehículos con claridad en el Zulia." />
+    <link rel="icon" href="/assets/img/logo.png" />
+    <title>Autos La 15 | Compra con claridad</title>
+  </head>
+  <body>
+    <header class="site-header">
+      <a class="brand" href="/" aria-label="Autos La 15, inicio">
+        <img src="/assets/img/logo.png" alt="Logo de Autos La 15" width="48" height="48" />
+        <span>Autos La 15</span>
+      </a>
+      <a class="header-link" href="/studio">Studio</a>
+    </header>
+
+    <main>
+      <section class="hero" aria-labelledby="hero-title">
+        <div class="hero-copy">
+          <p class="eyebrow">Familia zuliana desde 2005</p>
+          <h1 id="hero-title">Compra con claridad. Vende con confianza.</h1>
+          <p class="lead">Una base sólida para el nuevo sitio de Autos La 15, conectada al contenido de Sanity.</p>
+          <a class="button" href="#catalogo">Ver vehículos</a>
+        </div>
+        <img class="hero-image" src="/assets/img/hero.jpg" alt="Vehículos de Autos La 15" width="1200" height="800" />
+      </section>
+
+      <section class="section" id="catalogo" aria-labelledby="catalogo-title">
+        <p class="eyebrow">Próximamente</p>
+        <h2 id="catalogo-title">Inventario administrado desde Sanity</h2>
+        <p>El catálogo, la información de contacto y la página completa se incorporarán en los siguientes work units.</p>
+      </section>
+    </main>
+  </body>
+</html>

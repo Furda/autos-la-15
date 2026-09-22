@@ -1,0 +1,86 @@
+# Autos La 15 Real Astro + Sanity Site
+
+## Objective
+
+Build the production website behind the provisional static site using Astro, Sanity, and Vercel, while preserving the approved Autos La 15 visual direction, Spanish copy, image assets, and WhatsApp conversion flow.
+
+## Current state
+
+- Provisional static site is live at `https://provisional-khaki.vercel.app`.
+- Sanity project is authenticated and available through `SANITY_PROJECT_ID=7mz74qpp`.
+- Sanity write token is present as `SANITY_TOKEN` and has Developer read/write access.
+- Dataset is `production`.
+- Vercel CLI is authenticated.
+- Git is initialized on `feat/autosla15-real-site`.
+- The provisional site is the approved visual/content reference for the real build.
+
+## Authorized scope
+
+- Root Astro application files and configuration.
+- Sanity schema/studio files and seed scripts.
+- Shared public assets copied from the provisional site.
+- Root project documentation and task progress.
+- Do not modify or delete `provisional/`; it remains the client-facing fallback.
+- Do not commit `.env`, tokens, or credentials.
+
+## Autonomous task sequence
+
+### Foundation
+
+- [x] Scaffold Astro with strict TypeScript in the repository root without disturbing `provisional/`.
+- [x] Add Tailwind v4 or the smallest compatible styling setup and preserve the approved palette, Sora/Inter typography, and responsive tokens.
+- [x] Configure Vercel build output and root `.gitignore` coverage.
+- [x] Add the shared image assets needed by the real site.
+
+### Sanity content system
+
+- [x] Add embedded Sanity Studio at `/studio` using the existing project and `production` dataset.
+- [x] Create the `car` schema with title, year, price, description, image, status, featured, badge, WhatsApp message, optional 3D model file, and alt text.
+- [x] Use status values: `available`, `reserved`, `sold`, and `archived`.
+- [x] Create a singleton `siteSettings` schema for contact details, hours, addresses, social links, and homepage copy.
+- [ ] Create a one-time seed script for the 12 provisional vehicles and approved site content.
+- [ ] Validate read and write access against the configured Sanity project without exposing secrets.
+
+### Production page
+
+- [ ] Build the single-page Astro site from Sanity data.
+- [ ] Port the approved hero, stats, history, six-card catalog pagination, testimonials, FAQ, contact, footer, and floating WhatsApp patterns.
+- [ ] Keep general CTAs blue and WhatsApp actions green, except car `Consultar` actions which remain blue by approved design direction while opening WhatsApp.
+- [ ] Add JSON-LD `AutoDealer` data, sitemap, Open Graph metadata, canonical URL handling, and accessible alt text.
+- [ ] Preserve the current Spanish copy until CMS-managed content is seeded and verified.
+
+### Delivery and verification
+
+- [ ] Add a Sanity webhook or Vercel deploy hook so published CMS edits trigger a rebuild.
+- [ ] Link the real site to a separate Vercel project from the provisional deployment.
+- [ ] Run typecheck/build, structural checks, browser checks at desktop and mobile widths, and link/asset validation.
+- [ ] Create a first work-unit commit containing the foundation and record its identity here.
+- [ ] Deploy a preview, verify it, then deploy production only after the autonomous checks pass.
+
+## No-user-action assumptions
+
+- Use the existing Sanity project, `production` dataset, authenticated Developer token, and Vercel account.
+- Use the provisional content and assets as the initial source of truth.
+- Keep the real app separate from the deployed `provisional` Vercel project.
+- Prefer automatic progression through independent tasks; pause only for an actual credential, product, or destructive-action blocker.
+
+## Verification requirements
+
+- Required runner: Astro build and typecheck commands discovered during scaffold.
+- Required checks: build, asset/link validation, Sanity query validation, desktop/mobile browser verification, and WhatsApp URL verification.
+- Record failed, unavailable, or skipped checks honestly.
+
+## Progress
+
+- Route: delegated direct implementation, with one writer per coherent work unit.
+- Delivery strategy: automatic task progression unless a real external decision is required.
+- Provisional fallback remains live and must not be broken by real-site work.
+
+## Work unit 1 evidence
+
+- `npm install` completed successfully with exit code 0. The final install audited the dependency tree; npm reported existing upstream audit warnings and no install blocker.
+- `npm run check` completed successfully with `0 errors`, `0 warnings`, and `0 hints`.
+- `npm run build` completed successfully with static output and 2 pages built: `/index.html` and `/studio/index.html`. Sitemap generation was skipped, as expected, because `PUBLIC_SITE_URL` is intentionally unset.
+- Runtime harness: N/A for this foundation unit; the static build route output is the runtime boundary verified here.
+- Asset verification compared SHA-256 hashes for 15 source files under `provisional/assets/{img,autos}` and 15 copied files under `public/assets`; result: `source_files=15 copied_files=15 mismatches=0`.
+- `provisional/` was not modified by this work unit. No deployment was run.
