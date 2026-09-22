@@ -43,11 +43,11 @@ Build the production website behind the provisional static site using Astro, San
 
 ### Production page
 
-- [ ] Build the single-page Astro site from Sanity data.
-- [ ] Port the approved hero, stats, history, six-card catalog pagination, testimonials, FAQ, contact, footer, and floating WhatsApp patterns.
-- [ ] Keep general CTAs blue and WhatsApp actions green, except car `Consultar` actions which remain blue by approved design direction while opening WhatsApp.
-- [ ] Add JSON-LD `AutoDealer` data, sitemap, Open Graph metadata, canonical URL handling, and accessible alt text.
-- [ ] Preserve the current Spanish copy until CMS-managed content is seeded and verified.
+- [x] Build the single-page Astro site from Sanity data.
+- [x] Port the approved hero, stats, history, six-card catalog pagination, testimonials, FAQ, contact, footer, and floating WhatsApp patterns.
+- [x] Keep general CTAs blue and WhatsApp actions green, except car `Consultar` actions which remain blue by approved design direction while opening WhatsApp.
+- [x] Add JSON-LD `AutoDealer` data, sitemap, Open Graph metadata, canonical URL handling, and accessible alt text.
+- [x] Preserve the current Spanish copy until CMS-managed content is seeded and verified.
 
 ### Delivery and verification
 
@@ -93,4 +93,13 @@ Build the production website behind the provisional static site using Astro, San
 - Read-only GROQ verification completed with `cars=12 siteSettings=1` using a temporary local query script; the script was removed after verification.
 - `npm run check` completed successfully with `0 errors`, `0 warnings`, and `0 hints`.
 - `npm run build` completed successfully with `2 page(s) built`: `/index.html` and `/studio/index.html`. Sitemap generation was skipped because `PUBLIC_SITE_URL` is unset; this is the existing expected warning.
+- `provisional/` was not modified by this work unit. No deployment was run.
+
+## Work unit 3 evidence
+
+- `npm run seed:sanity` completed successfully after adding the seeded editorial assets: `12 cars`, `1 siteSettings document`, `14 images uploaded or reused` (`2 uploaded`, `12 reused`).
+- `npm run check` completed successfully with `0 errors`, `0 warnings`, and `0 hints`.
+- `npm run build` completed successfully with `2 page(s) built`: `/index.html` and `/studio/index.html`. Sitemap generation was skipped because `PUBLIC_SITE_URL` remains unset.
+- Build-source structural check passed: `12` Sanity-rendered vehicle cards, `2` catalog pages, `17` WhatsApp links, `AutoDealer` JSON-LD, and `0` missing local assets. No sitemap file was generated while the canonical site URL is unset.
+- Built-site preview at `http://127.0.0.1:4321/` passed at `1920px` and `390px`: `6` visible cards per page, page 2 pagination state, keyboard-capable controls, `4` FAQ items with single-open behavior, contact map, valid WhatsApp hrefs, and no horizontal overflow. Browser console reported `0` errors.
 - `provisional/` was not modified by this work unit. No deployment was run.

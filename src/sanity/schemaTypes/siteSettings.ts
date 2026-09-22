@@ -73,5 +73,19 @@ export const siteSettings = defineType({
         defineField({ name: 'catalogHeading', title: 'Título del catálogo', type: 'string' }),
       ],
     }),
+    defineField({
+      name: 'heroImage',
+      title: 'Imagen principal',
+      type: 'image',
+      options: { hotspot: true },
+      fields: [defineField({ name: 'alt', title: 'Texto alternativo', type: 'string', validation: (Rule) => Rule.required() })],
+    }),
+    defineField({
+      name: 'historyImage',
+      title: 'Imagen de nuestra historia',
+      type: 'image',
+      options: { hotspot: true },
+      fields: [defineField({ name: 'alt', title: 'Texto alternativo', type: 'string', validation: (Rule) => Rule.required() })],
+    }),
   ],
 });

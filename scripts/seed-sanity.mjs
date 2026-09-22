@@ -144,6 +144,19 @@ const vehicles = [
   },
 ];
 
+const editorialAssets = [
+  {
+    key: 'heroImage',
+    image: 'hero.jpg',
+    alt: 'Vehículos exhibidos en la sede de Autos La 15',
+  },
+  {
+    key: 'historyImage',
+    image: 'who-are-we-section.jpg',
+    alt: 'Fachada de Autos La 15 en Maracaibo con vehículos en exhibición',
+  },
+];
+
 const formatPrice = (price) => `$${price.toLocaleString('en-US')}`;
 
 const loadAssets = async () => {
@@ -164,6 +177,33 @@ const loadAssets = async () => {
 
     loaded.push({
       ...vehicle,
+      sourcePath,
+      buffer,
+      sha1: createHash('sha1').update(buffer).digest('hex'),
+    });
+  }
+
+  return loaded;
+};
+
+const loadEditorialAssets = async () => {
+  const loaded = [];
+
+  for (const editorialAsset of editorialAssets) {
+    const sourcePath = fileURLToPath(new URL(`../provisional/assets/img/${editorialAsset.image}`, import.meta.url));
+    let buffer;
+
+    try {
+      buffer = await readFile(sourcePath);
+    } catch (error) {
+      if (error?.code === 'ENOENT') {
+        throw new Error(`Missing required provisional image: ${sourcePath}`);
+      }
+      throw error;
+    }
+
+    loaded.push({
+      ...editorialAsset,
       sourcePath,
       buffer,
       sha1: createHash('sha1').update(buffer).digest('hex'),
@@ -217,7 +257,7 @@ const seedCar = async (vehicle, assetId) => {
   await client.createOrReplace(document);
 };
 
-const seedSiteSettings = async () => {
+const seedSiteSettings = async ({ heroAssetId, historyAssetId }) => {
   await client.createOrReplace({
     _id: 'siteSettings',
     _type: 'siteSettings',
@@ -257,11 +297,22 @@ const seedSiteSettings = async () => {
         'Desde Maracaibo y Ciudad Ojeda, te acompañamos a comprar o vender tu vehículo con información clara y atención cercana.',
       catalogHeading: 'Revisa el inventario con calma',
     },
+    heroImage: {
+      _type: 'image',
+      asset: { _type: 'reference', _ref: heroAssetId },
+      alt: 'Vehículos exhibidos en la sede de Autos La 15',
+    },
+    historyImage: {
+      _type: 'image',
+      asset: { _type: 'reference', _ref: historyAssetId },
+      alt: 'Fachada de Autos La 15 en Maracaibo con vehículos en exhibición',
+    },
   });
 };
 
 const main = async () => {
   const loadedVehicles = await loadAssets();
+  const loadedEditorialAssets = await loadEditorialAssets();
   let uploadedCount = 0;
 
   for (const vehicle of loadedVehicles) {
@@ -270,10 +321,18 @@ const main = async () => {
     await seedCar(vehicle, result.assetId);
   }
 
-  await seedSiteSettings();
+  const editorialAssetIds = {};
+  for (const editorialAsset of loadedEditorialAssets) {
+    const result = await getOrUploadImage(editorialAsset);
+    uploadedCount += result.uploaded ? 1 : 0;
+    editorialAssetIds[editorialAsset.key] = result.assetId;
+  }
+
+  await seedSiteSettings({ heroAssetId: editorialAssetIds.heroImage, historyAssetId: editorialAssetIds.historyImage });
 
   console.log(`Seed complete: ${loadedVehicles.length} cars, 1 siteSettings document.`);
-  console.log(`Images uploaded or reused: ${loadedVehicles.length} total (${uploadedCount} uploaded, ${loadedVehicles.length - uploadedCount} reused).`);
+  const totalImages = loadedVehicles.length + loadedEditorialAssets.length;
+  console.log(`Images uploaded or reused: ${totalImages} total (${uploadedCount} uploaded, ${totalImages - uploadedCount} reused).`);
 };
 
 main().catch((error) => {

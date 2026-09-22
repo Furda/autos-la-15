@@ -1,44 +1,303 @@
 ---
+import { createImageUrlBuilder } from '@sanity/image-url';
 import { sanityClient } from 'sanity:client';
 import '../styles/global.css';
 
-const sanityProjectId = sanityClient.config().projectId;
+type SanityImage = {
+  asset?: { _ref?: string };
+  alt?: string;
+  crop?: { top?: number; bottom?: number; left?: number; right?: number };
+  hotspot?: { x?: number; y?: number; width?: number; height?: number };
+};
+
+type Car = {
+  _id: string;
+  name: string;
+  title?: string;
+  year: number;
+  price: number;
+  description?: string;
+  image?: SanityImage;
+  status: 'available' | 'reserved';
+  featured?: boolean;
+  badge?: string;
+  whatsappMessage?: string;
+  model3d?: { asset?: { _ref?: string } };
+};
+
+type Location = { city?: string; address?: string; mapUrl?: string };
+type Hour = { label?: string; opening?: string; closing?: string };
+type SiteSettings = {
+  identity?: { brandName?: string; tagline?: string };
+  contact?: { phone?: string; whatsapp?: string; email?: string };
+  hours?: Hour[];
+  locations?: Location[];
+  socialLinks?: { instagram?: string; facebook?: string; tiktok?: string };
+  homepageCopy?: { eyebrow?: string; title?: string; description?: string; catalogHeading?: string };
+  heroImage?: SanityImage;
+  historyImage?: SanityImage;
+};
+
+const siteSettings = (await sanityClient.fetch<SiteSettings | null>(`*[_type == "siteSettings"][0]{
+  identity, contact, hours, locations, socialLinks, homepageCopy,
+  heroImage{..., "asset": asset, "alt": coalesce(alt, "Vehículos exhibidos en Autos La 15")},
+  historyImage{..., "asset": asset, "alt": coalesce(alt, "Fachada de Autos La 15")}
+}`)) ?? {};
+const cars = await sanityClient.fetch<Car[]>(`*[_type == "car" && status in ["available", "reserved"]]
+  | order(featured desc, _createdAt asc, _id asc){
+    _id, name, title, year, price, description, image{..., "asset": asset, "alt": coalesce(alt, name)},
+    status, featured, badge, whatsappMessage, model3d
+  }`);
+
+const config = sanityClient.config();
+if (!config.projectId || !config.dataset) throw new Error('Sanity project configuration is required to build image URLs.');
+const imageBuilder = createImageUrlBuilder({ projectId: config.projectId, dataset: config.dataset });
+const imageUrl = (image: SanityImage | undefined, width: number, height: number) =>
+  image?.asset?._ref ? imageBuilder.image(image).width(width).height(height).fit('crop').auto('format').url() : '';
+
+const homepageCopy = siteSettings.homepageCopy ?? {};
+const brandName = siteSettings.identity?.brandName ?? 'AUTOS LA 15';
+const tagline = siteSettings.identity?.tagline ?? 'Compra con claridad. Vende con confianza.';
+const contact = siteSettings.contact ?? {};
+const locations = siteSettings.locations ?? [];
+const hours = siteSettings.hours ?? [];
+const firstLocation = locations[0];
+const whatsappNumber = (contact.whatsapp || contact.phone || '').replace(/[^\d]/g, '');
+const generalMessage = 'Hola AUTOS LA 15, quiero más información';
+const whatsappHref = (message: string) =>
+  whatsappNumber ? `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(message)}` : '#contacto';
+const heroUrl = imageUrl(siteSettings.heroImage, 2400, 1600);
+const historyUrl = imageUrl(siteSettings.historyImage, 1400, 1270);
+const mapSrc = firstLocation?.mapUrl
+  ? `${firstLocation.mapUrl}${firstLocation.mapUrl.includes('?') ? '&' : '?'}z=17&output=embed`
+  : '';
+const siteUrl = import.meta.env.PUBLIC_SITE_URL?.trim();
+const canonicalUrl = siteUrl ? new URL('/', siteUrl).toString() : undefined;
+const formatPrice = (price: number) =>
+  new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(price);
+const pages: Car[][] = [];
+for (let index = 0; index < cars.length; index += 6) pages.push(cars.slice(index, index + 6));
+
+const structuredData = {
+  '@context': 'https://schema.org',
+  '@type': 'AutoDealer',
+  name: brandName,
+  description: homepageCopy.description,
+  telephone: contact.phone,
+  email: contact.email,
+  ...(siteUrl ? { url: siteUrl } : {}),
+  areaServed: locations.map((location) => location.city).filter(Boolean),
+  address: firstLocation?.address
+    ? { '@type': 'PostalAddress', addressLocality: firstLocation.city, streetAddress: firstLocation.address, addressCountry: 'VE' }
+    : undefined,
+  sameAs: [siteSettings.socialLinks?.instagram, siteSettings.socialLinks?.facebook, siteSettings.socialLinks?.tiktok].filter(Boolean),
+};
 ---
 
 <!doctype html>
-<html lang="es" data-sanity-configured={Boolean(sanityProjectId)}>
+<html lang="es">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width" />
-    <meta name="description" content="Autos La 15, compra y vende vehículos con claridad en el Zulia." />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="description" content={homepageCopy.description} />
+    <meta property="og:title" content={`${brandName} | ${tagline}`} />
+    <meta property="og:description" content={homepageCopy.description} />
+    <meta property="og:type" content="website" />
+    <meta property="og:image" content={heroUrl} />
+    {canonicalUrl && <link rel="canonical" href={canonicalUrl} />}
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="anonymous" />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Sora:wght@600;700;800&display=swap" rel="stylesheet" />
     <link rel="icon" href="/assets/img/logo.png" />
-    <title>Autos La 15 | Compra con claridad</title>
+    <title>{brandName} | {tagline}</title>
+    <script type="application/ld+json" set:html={JSON.stringify(structuredData)}></script>
   </head>
   <body>
-    <header class="site-header">
-      <a class="brand" href="/" aria-label="Autos La 15, inicio">
-        <img src="/assets/img/logo.png" alt="Logo de Autos La 15" width="48" height="48" />
-        <span>Autos La 15</span>
-      </a>
-      <a class="header-link" href="/studio">Studio</a>
+    <a class="skip-link" href="#main-content">Saltar al contenido</a>
+
+    <header class="site-header" id="top">
+      <div class="container header-inner">
+        <a href="#top" class="brand" aria-label={`${brandName}, inicio`}>
+          <img src="/assets/img/logo.png" alt={`Logo de ${brandName}`} class="brand-logo" width="40" height="40" />
+          <span class="brand-text"><strong>{brandName}</strong><small>{tagline}</small></span>
+        </a>
+        <nav class="main-nav" id="main-nav" aria-label="Navegación principal">
+          <a href="#nosotros">Nuestra historia</a>
+          <a href="#catalogo">Vehículos</a>
+          <a href="#testimonios">Opiniones</a>
+          <a href="#faq">Preguntas</a>
+          <a href="#contacto">Contacto</a>
+        </nav>
+        <div class="header-actions">
+          <a class="btn btn-whatsapp" href={whatsappHref(generalMessage)} target="_blank" rel="noopener" aria-label="Hablar con Autos La 15 por WhatsApp">
+            <span class="whatsapp-glyph" aria-hidden="true">WA</span><span>Hablar por WhatsApp</span>
+          </a>
+          <button class="nav-toggle" id="nav-toggle" type="button" aria-label="Abrir navegación" aria-expanded="false" aria-controls="main-nav">
+            <span></span><span></span><span></span>
+          </button>
+        </div>
+      </div>
     </header>
 
-    <main>
+    <main id="main-content">
       <section class="hero" aria-labelledby="hero-title">
-        <div class="hero-copy">
-          <p class="eyebrow">Familia zuliana desde 2005</p>
-          <h1 id="hero-title">Compra con claridad. Vende con confianza.</h1>
-          <p class="lead">Una base sólida para el nuevo sitio de Autos La 15, conectada al contenido de Sanity.</p>
-          <a class="button" href="#catalogo">Ver vehículos</a>
+        <img class="hero-image" src={heroUrl} alt={siteSettings.heroImage?.alt ?? 'Vehículos exhibidos en la sede de Autos La 15'} width="2400" height="1600" fetchpriority="high" />
+        <div class="hero-overlay" aria-hidden="true"></div>
+        <div class="container hero-inner">
+          <div class="hero-content">
+            <p class="eyebrow reveal">{homepageCopy.eyebrow}</p>
+            <h1 id="hero-title" class="reveal">{homepageCopy.title}</h1>
+            <p class="hero-lead reveal">{homepageCopy.description}</p>
+            <div class="hero-actions reveal">
+              <a href="#catalogo" class="btn btn-primary">Ver vehículos</a>
+              <a href={whatsappHref(generalMessage)} class="btn btn-ghost" target="_blank" rel="noopener">Hablar por WhatsApp</a>
+            </div>
+          </div>
+          <span class="hero-scroll-hint" aria-hidden="true">Ver vehículos disponibles <span>↓</span></span>
         </div>
-        <img class="hero-image" src="/assets/img/hero.jpg" alt="Vehículos de Autos La 15" width="1200" height="800" />
       </section>
 
-      <section class="section" id="catalogo" aria-labelledby="catalogo-title">
-        <p class="eyebrow">Próximamente</p>
-        <h2 id="catalogo-title">Inventario administrado desde Sanity</h2>
-        <p>El catálogo, la información de contacto y la página completa se incorporarán en los siguientes work units.</p>
+      <section class="stats reveal" aria-label="Datos de Autos La 15">
+        <div class="container">
+          <div class="stats-intro"><p class="section-eyebrow">Una trayectoria que conoces</p><p>Datos concretos de una familia que trabaja en el Zulia desde 2005.</p></div>
+          <div class="stats-grid">
+            <div class="stat"><span class="stat-num" data-count-to="2005">0</span><span class="stat-label">Año en que comenzamos</span></div>
+            <div class="stat"><span class="stat-num" data-count-to="20" data-suffix="+">0</span><span class="stat-label">Más de 20 años de trayectoria</span></div>
+            <div class="stat"><span class="stat-num" data-count-to="2">0</span><span class="stat-label">Ciudades: Maracaibo y Ciudad Ojeda</span></div>
+            <div class="stat"><span class="stat-num" data-count-to="100" data-suffix="%">0</span><span class="stat-label">Papeles originales</span></div>
+          </div>
+        </div>
+      </section>
+
+      <section class="section" id="nosotros" aria-labelledby="history-title">
+        <div class="container history-grid">
+          <div class="history-media reveal"><img src={historyUrl} alt={siteSettings.historyImage?.alt ?? 'Fachada de Autos La 15 en Maracaibo con vehículos en exhibición'} width="1400" height="1270" loading="lazy" /></div>
+          <div class="history-copy">
+            <p class="section-eyebrow reveal">Nuestra historia</p>
+            <h2 id="history-title" class="reveal">Una familia que conoce el camino</h2>
+            <p class="section-lead reveal">Somos una empresa familiar que atiende a la comunidad del Zulia desde 2005. Trabajamos en Maracaibo y Ciudad Ojeda, donde hemos visto pasar miles de vehículos y, sobre todo, hemos construido la confianza de miles de familias zulianas.</p>
+            <p class="section-lead reveal">Empezamos con una idea sencilla: comprar y vender como nos gustaría que nos atendieran, con un proceso claro, opciones atractivas y papeles 100% originales. Esa forma de trabajar sigue guiándonos. Hoy reunimos más de 20 años de experiencia, trato honesto y orientación práctica para que tomes una decisión bien informada.</p>
+          </div>
+        </div>
+      </section>
+
+      <section class="section section-alt" id="catalogo" aria-labelledby="catalog-title">
+        <div class="container">
+          <p class="section-eyebrow reveal">Vehículos disponibles</p>
+          <h2 id="catalog-title" class="reveal">{homepageCopy.catalogHeading}</h2>
+          <p class="section-lead reveal">Conoce nuestra selección de vehículos nuevos y usados. Los precios mostrados corresponden a la actualización de septiembre.</p>
+          <div class="catalog-pages">
+            {pages.map((page, pageIndex) => (
+              <div class="catalog-page" data-catalog-page={pageIndex} aria-label={`Página ${pageIndex + 1} del catálogo`} hidden={pageIndex !== 0}>
+                <div class="catalog-grid">
+                  {page.map((car) => (
+                    <article class="car-card reveal" data-car-id={car._id}>
+                      <div class="car-media">
+                        <img src={imageUrl(car.image, 1000, 690)} alt={car.image?.alt ?? `${car.name}, vehículo de Autos La 15`} width="1000" height="690" loading="lazy" />
+                        {car.badge && <span class="badge">{car.badge}</span>}
+                        {car.status === 'reserved' && <span class="badge badge-reserved">Reservado</span>}
+                      </div>
+                      <div class="car-body">
+                        <h3>{car.name}</h3>
+                        <p class="car-desc">{car.description}</p>
+                        <div class="car-foot"><span class="car-price">{formatPrice(car.price)}</span><a class="btn btn-sm btn-primary" target="_blank" rel="noopener" href={whatsappHref(car.whatsappMessage ?? `Hola AUTOS LA 15, me interesa el ${car.name}. ¿Me comparten más información?`)}>Consultar vehículo</a></div>
+                      </div>
+                    </article>
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
+          <nav class="catalog-controls" aria-label="Paginación del catálogo">
+            <button class="catalog-control" type="button" data-catalog-prev aria-label="Ver página anterior del catálogo">Anterior</button>
+            <div class="catalog-indicators" role="group" aria-label="Páginas del catálogo">
+              {pages.map((_, index) => <button class:list={['page-indicator', index === 0 && 'is-active']} type="button" data-catalog-indicator={index} aria-label={`Ver página ${index + 1}`} aria-current={index === 0 ? 'page' : undefined}>{String(index + 1).padStart(2, '0')}</button>)}
+            </div>
+            <p class="catalog-status" data-catalog-status aria-live="polite">Página 1 de {pages.length} · 6 vehículos</p>
+            <button class="catalog-control" type="button" data-catalog-next aria-label="Ver página siguiente del catálogo">Siguiente</button>
+          </nav>
+          <p class="catalog-note reveal">¿Quieres vender o dejar tu vehículo en consignación? <a href="#faq">Conoce el proceso</a>.</p>
+        </div>
+      </section>
+
+      <section class="section" id="testimonios" aria-labelledby="testimonials-title">
+        <div class="container">
+          <p class="section-eyebrow reveal">Experiencias de quienes nos eligieron</p>
+          <h2 id="testimonials-title" class="reveal">La confianza también se cuenta</h2>
+          <div class="testimonial-layout">
+            <article class="testimonial-feature reveal"><span class="quote-mark" aria-hidden="true">“</span><div class="stars" aria-label="5 de 5 estrellas"><span aria-hidden="true">★★★★★</span></div><p>“Excelente atención en este concesionario. Compré mi Super Duty y el trato fue impecable de inicio a fin. Rápidos, claros y muy profesionales. Sin duda, volvería a comprar aquí. Totalmente recomendados.”</p><span class="testimonial-author">Alfredo Gutiérrez · Mayo 2026</span></article>
+            <div class="testimonial-support">
+              <article class="testimonial-card reveal"><div class="stars" aria-label="5 de 5 estrellas"><span aria-hidden="true">★★★★★</span></div><p>“Encontré el auto perfecto para mi familia. El equipo fue muy paciente y amable con todas mis dudas.”</p><span class="testimonial-author">Cliente de Autos LA 15</span></article>
+              <article class="testimonial-card reveal"><div class="stars" aria-label="5 de 5 estrellas"><span aria-hidden="true">★★★★★</span></div><p>“Vendí mi usado y me dieron un precio justo. La transacción fue rápida y segura. Gracias por todo.”</p><span class="testimonial-author">Cliente de Autos LA 15</span></article>
+              <article class="testimonial-card reveal"><div class="stars" aria-label="5 de 5 estrellas"><span aria-hidden="true">★★★★★</span></div><p>“Amplia variedad de modelos y con opciones de financiamiento. Logré comprar mi primer auto con facilidades.”</p><span class="testimonial-author">Cliente de Autos LA 15</span></article>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="section section-alt" id="faq" aria-labelledby="faq-title">
+        <div class="container faq-layout">
+          <div class="faq-intro reveal"><p class="section-eyebrow">Información para decidir</p><h2 id="faq-title">Antes de comprar o vender</h2><p>Aquí tienes respuestas claras sobre financiamiento, garantías, visitas y consignación.</p><a class="text-link" href="#contacto">Hablar con el equipo <span aria-hidden="true">↗</span></a></div>
+          <ol class="faq-list reveal">
+            <li class="faq-item"><details open><summary><span>¿Tienen opciones de financiamiento?</span></summary><div class="faq-content"><p>Sí. Trabajamos con una financiadora externa al concesionario. Esta financiadora exige una cuota inicial del 60% del monto total y hasta 1 año para pagar el 40% restante. Los principales requisitos son los últimos 6 movimientos bancarios de la cuenta desde donde se financiaría el vehículo, 2 referencias bancarias, 1 referencia personal, la hoja de vida del aplicante y el registro mercantil, solo si el cliente lo posee.</p><p>Para financiar, primero debes asegurar el vehículo contra todo riesgo. Nosotros cotizamos la póliza y asistimos en el proceso. También debes instalar un dispositivo GPS durante el tiempo que el vehículo sea financiado, con un costo de $300 al año. Por último, debes asumir el documento de compraventa, con un costo aproximado de $400 que incluye revisión INTT y notaría.</p></div></details></li>
+            <li class="faq-item"><details><summary><span>¿Qué garantía tiene cada vehículo?</span></summary><div class="faq-content"><p>El inventario incluye opciones nuevas, seminuevas y usadas. Los carros nuevos tienen garantía, pero los años y el kilometraje varían según cada opción. Las seminuevas pueden conservar una garantía vigente, así que conviene consultar el caso puntual. Las opciones usadas no cuentan con garantía. Recomendamos venir con un mecánico de confianza y hacer una prueba de manejo antes de decidir.</p></div></details></li>
+            <li class="faq-item"><details><summary><span>¿Cómo agendo una visita?</span></summary><div class="faq-content"><p>Puedes reservar una cita por Instagram o WhatsApp para ver los modelos. Estamos abiertos de lunes a viernes de 8:30am a 5pm y sábados de 9am a 1pm.</p></div></details></li>
+            <li class="faq-item"><details><summary><span>¿Puedo vender o consignar mi vehículo?</span></summary><div class="faq-content"><p>Sí, manejamos 2 opciones. Puedes traernos tu vehículo y, si nos interesa después de verlo y probarlo, conversamos. Si lo valoramos a un precio justo para ambos, te hacemos una oferta directa. La segunda opción es dejarlo a consignación: lo exhibimos como parte del inventario y cobramos una comisión al venderlo. La comisión varía según el monto del vehículo y se coordina al firmar el contrato.</p></div></details></li>
+          </ol>
+        </div>
+      </section>
+
+      <section class="section contact-section" id="contacto" aria-labelledby="contact-title">
+        <div class="container">
+          <div class="contact-heading reveal"><p class="section-eyebrow">Hablemos claro</p><h2 id="contact-title">Tu próximo vehículo<br />empieza aquí</h2><p>Cuéntanos qué estás buscando, visítanos en Maracaibo o Ciudad Ojeda, o escríbenos directamente por WhatsApp.</p></div>
+          <div class="contact-cards">
+            <article class="contact-card reveal"><span class="contact-card-number">01</span><h3>Compra o vende</h3><p>Revisa opciones nuevas, seminuevas y usadas, o conversemos sobre tu vehículo.</p><a class="contact-card-link" href="#catalogo">Ver vehículos <span aria-hidden="true">↗</span></a></article>
+            <article class="contact-card reveal"><span class="contact-card-number">02</span><h3>Visítanos</h3><p>Estamos en Maracaibo y Ciudad Ojeda para atenderte durante nuestro horario de atención.</p><div class="contact-card-details"><a href={`tel:${contact.phone ?? ''}`}>{contact.phone}</a>{hours.map((hour) => <span>{hour.label}: {hour.opening} - {hour.closing}</span>)}</div></article>
+            <article class="contact-card reveal"><span class="contact-card-number">03</span><h3>Consulta al equipo</h3><p>Pregúntanos sobre vehículos, financiamiento, garantías o consignación.</p><div class="contact-card-details"><a href={`mailto:${contact.email ?? ''}`}>{contact.email}</a>{siteSettings.socialLinks?.instagram && <a href={siteSettings.socialLinks.instagram} target="_blank" rel="noopener">Instagram @autosla15</a>}</div></article>
+          </div>
+          <div class="contact-actions reveal"><div class="contact-location"><span class="contact-icon" aria-hidden="true">⌖</span><span><strong>Dónde encontrarnos</strong><br />{locations.map((location, index) => <span>{location.address}{index < locations.length - 1 ? ' · ' : ''}</span>)}</span></div><a class="btn btn-whatsapp contact-cta" href={whatsappHref(generalMessage)} target="_blank" rel="noopener">Hablar por WhatsApp</a></div>
+          {mapSrc && <div class="contact-map reveal"><iframe src={mapSrc} width="100%" height="100%" loading="lazy" referrerpolicy="no-referrer-when-downgrade" title={`Mapa de ubicación de ${brandName} en ${firstLocation?.city}`}></iframe></div>}
+        </div>
       </section>
     </main>
+
+    <footer class="site-footer">
+      <div class="container footer-inner">
+        <div class="footer-lockup"><a href="#top" class="brand"><img src="/assets/img/logo.png" alt={`Logo de ${brandName}`} class="brand-logo" width="40" height="40" /><span class="brand-text"><strong>{brandName}</strong></span></a><p>{tagline}</p></div>
+        <nav class="footer-nav" aria-label="Navegación del pie de página"><a href="#nosotros">Nuestra historia</a><a href="#catalogo">Vehículos</a><a href="#testimonios">Opiniones</a><a href="#faq">Preguntas</a><a href="#contacto">Contacto</a></nav>
+        <a class="footer-action" href={whatsappHref(generalMessage)} target="_blank" rel="noopener">Hablar por WhatsApp <span aria-hidden="true">↗</span></a>
+        <p class="footer-copy">© 2026 {brandName}. Todos los derechos reservados.</p>
+      </div>
+    </footer>
+
+    <a href={whatsappHref(generalMessage)} class="whatsapp-fab" id="whatsapp-fab" target="_blank" rel="noopener" aria-label={`Hablar con ${brandName} por WhatsApp`}><span aria-hidden="true">WA</span></a>
+
+    <script>
+      const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      const header = document.querySelector('.site-header');
+      const toggle = document.getElementById('nav-toggle');
+      const closeMenu = () => { if (!header || !toggle) return; header.classList.remove('nav-open'); toggle.classList.remove('open'); toggle.setAttribute('aria-expanded', 'false'); };
+      toggle?.addEventListener('click', () => { const isOpen = header?.classList.toggle('nav-open') ?? false; toggle.classList.toggle('open', isOpen); toggle.setAttribute('aria-expanded', String(isOpen)); });
+      document.querySelectorAll('.main-nav a').forEach((link) => link.addEventListener('click', closeMenu));
+      document.addEventListener('keydown', (event) => { if (event.key === 'Escape') closeMenu(); });
+      window.addEventListener('scroll', () => { header?.classList.toggle('scrolled', window.scrollY > 8); document.getElementById('whatsapp-fab')?.classList.toggle('visible', window.scrollY > 400); }, { passive: true });
+
+      const revealElements = document.querySelectorAll('.reveal');
+      if ('IntersectionObserver' in window && !reducedMotion) {
+        const observer = new IntersectionObserver((entries) => entries.forEach((entry) => { if (entry.isIntersecting || entry.boundingClientRect.bottom < 0) { entry.target.classList.add('is-visible'); observer.unobserve(entry.target); } }), { threshold: 0.12 });
+        revealElements.forEach((element) => observer.observe(element));
+      } else revealElements.forEach((element) => element.classList.add('is-visible'));
+
+      const statNumbers = document.querySelectorAll('[data-count-to]');
+      const animateCount = (element: Element) => { const target = Number(element.getAttribute('data-count-to')); const suffix = element.getAttribute('data-suffix') ?? ''; if (reducedMotion) { element.textContent = `${target}${suffix}`; return; } const start = performance.now(); const step = (now: number) => { const progress = Math.min((now - start) / 1300, 1); element.textContent = `${Math.round(target * (1 - Math.pow(1 - progress, 3)))}${suffix}`; if (progress < 1) requestAnimationFrame(step); else element.textContent = `${target}${suffix}`; }; requestAnimationFrame(step); };
+      const stats = document.querySelector('.stats');
+      if (stats && statNumbers.length) { if ('IntersectionObserver' in window && !reducedMotion) { const statsObserver = new IntersectionObserver((entries) => { if (entries.some((entry) => entry.isIntersecting || entry.boundingClientRect.bottom < 0)) { statNumbers.forEach(animateCount); statsObserver.disconnect(); } }, { threshold: 0.3 }); statsObserver.observe(stats); } else statNumbers.forEach(animateCount); }
+
+      const catalogPages = [...document.querySelectorAll<HTMLElement>('.catalog-page')]; const indicators = [...document.querySelectorAll<HTMLButtonElement>('[data-catalog-indicator]')]; const previousButton = document.querySelector<HTMLButtonElement>('[data-catalog-prev]'); const nextButton = document.querySelector<HTMLButtonElement>('[data-catalog-next]'); const catalogStatus = document.querySelector<HTMLElement>('[data-catalog-status]'); let currentPage = 0;
+      const showCatalogPage = (pageIndex: number) => { if (!catalogPages.length) return; currentPage = Math.max(0, Math.min(pageIndex, catalogPages.length - 1)); catalogPages.forEach((page, index) => { const current = index === currentPage; page.hidden = !current; page.setAttribute('aria-hidden', String(!current)); if (current) page.querySelectorAll('.reveal').forEach((element) => element.classList.add('is-visible')); }); indicators.forEach((indicator, index) => { const current = index === currentPage; indicator.classList.toggle('is-active', current); if (current) indicator.setAttribute('aria-current', 'page'); else indicator.removeAttribute('aria-current'); }); if (previousButton) previousButton.disabled = currentPage === 0; if (nextButton) nextButton.disabled = currentPage === catalogPages.length - 1; if (catalogStatus) catalogStatus.textContent = `Página ${currentPage + 1} de ${catalogPages.length} · 6 vehículos`; };
+      previousButton?.addEventListener('click', () => showCatalogPage(currentPage - 1)); nextButton?.addEventListener('click', () => showCatalogPage(currentPage + 1)); indicators.forEach((indicator) => indicator.addEventListener('click', () => showCatalogPage(Number(indicator.getAttribute('data-catalog-indicator'))))); showCatalogPage(0);
+
+      document.querySelectorAll<HTMLDetailsElement>('.faq-item details').forEach((detail) => detail.addEventListener('toggle', () => { if (detail.open) document.querySelectorAll<HTMLDetailsElement>('.faq-item details[open]').forEach((other) => { if (other !== detail) other.removeAttribute('open'); }); }));
+    </script>
   </body>
 </html>
