@@ -38,8 +38,8 @@ Build the production website behind the provisional static site using Astro, San
 - [x] Create the `car` schema with title, year, price, description, image, status, featured, badge, WhatsApp message, optional 3D model file, and alt text.
 - [x] Use status values: `available`, `reserved`, `sold`, and `archived`.
 - [x] Create a singleton `siteSettings` schema for contact details, hours, addresses, social links, and homepage copy.
-- [ ] Create a one-time seed script for the 12 provisional vehicles and approved site content.
-- [ ] Validate read and write access against the configured Sanity project without exposing secrets.
+- [x] Create a one-time seed script for the 12 provisional vehicles and approved site content.
+- [x] Validate read and write access against the configured Sanity project without exposing secrets.
 
 ### Production page
 
@@ -84,4 +84,13 @@ Build the production website behind the provisional static site using Astro, San
 - `npm run build` completed successfully with static output and 2 pages built: `/index.html` and `/studio/index.html`. Sitemap generation was skipped, as expected, because `PUBLIC_SITE_URL` is intentionally unset.
 - Runtime harness: N/A for this foundation unit; the static build route output is the runtime boundary verified here.
 - Asset verification compared SHA-256 hashes for 15 source files under `provisional/assets/{img,autos}` and 15 copied files under `public/assets`; result: `source_files=15 copied_files=15 mismatches=0`.
+- `provisional/` was not modified by this work unit. No deployment was run.
+
+## Work unit 2 evidence
+
+- `npm run seed:sanity` completed successfully: `12 cars`, `1 siteSettings document`, `12 images uploaded`, and no credentials were logged.
+- A second `npm run seed:sanity` completed successfully and reused all `12` existing image assets (`0 uploaded`, `12 reused`), confirming safe reruns with deterministic car documents.
+- Read-only GROQ verification completed with `cars=12 siteSettings=1` using a temporary local query script; the script was removed after verification.
+- `npm run check` completed successfully with `0 errors`, `0 warnings`, and `0 hints`.
+- `npm run build` completed successfully with `2 page(s) built`: `/index.html` and `/studio/index.html`. Sitemap generation was skipped because `PUBLIC_SITE_URL` is unset; this is the existing expected warning.
 - `provisional/` was not modified by this work unit. No deployment was run.
