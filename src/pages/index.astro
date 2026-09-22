@@ -1,6 +1,8 @@
 ---
 import { createImageUrlBuilder } from '@sanity/image-url';
 import { sanityClient } from 'sanity:client';
+import heroImage from '../../assets/hero-image-large.jpg';
+import whoAreWeImage from '../../assets/who-are-we-image.jpg';
 import '../styles/global.css';
 
 type SanityImage = {
@@ -35,13 +37,11 @@ type SiteSettings = {
   socialLinks?: { instagram?: string; facebook?: string; tiktok?: string };
   homepageCopy?: { eyebrow?: string; title?: string; description?: string; catalogHeading?: string };
   heroImage?: SanityImage;
-  historyImage?: SanityImage;
 };
 
 const siteSettings = (await sanityClient.fetch<SiteSettings | null>(`*[_type == "siteSettings"][0]{
   identity, contact, hours, locations, socialLinks, homepageCopy,
-  heroImage{..., "asset": asset, "alt": coalesce(alt, "Vehículos exhibidos en Autos La 15")},
-  historyImage{..., "asset": asset, "alt": coalesce(alt, "Fachada de Autos La 15")}
+  heroImage{..., "asset": asset, "alt": coalesce(alt, "Vehículos exhibidos en Autos La 15")}
 }`)) ?? {};
 const cars = await sanityClient.fetch<Car[]>(`*[_type == "car" && status in ["available", "reserved"]]
   | order(featured desc, _createdAt asc, _id asc){
@@ -66,13 +66,14 @@ const whatsappNumber = (contact.whatsapp || contact.phone || '').replace(/[^\d]/
 const generalMessage = 'Hola AUTOS LA 15, quiero más información';
 const whatsappHref = (message: string) =>
   whatsappNumber ? `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(message)}` : '#contacto';
-const heroUrl = imageUrl(siteSettings.heroImage, 2400, 1600);
-const historyUrl = imageUrl(siteSettings.historyImage, 1400, 1270);
+const heroSrc = heroImage.src;
+const historySrc = whoAreWeImage.src;
 const mapSrc = firstLocation?.mapUrl
   ? `${firstLocation.mapUrl}${firstLocation.mapUrl.includes('?') ? '&' : '?'}z=17&output=embed`
   : '';
 const siteUrl = import.meta.env.PUBLIC_SITE_URL?.trim();
 const canonicalUrl = siteUrl ? new URL('/', siteUrl).toString() : undefined;
+const heroOgUrl = siteUrl ? new URL(heroSrc, siteUrl).toString() : heroSrc;
 const formatPrice = (price: number) =>
   new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(price);
 const pages: Car[][] = [];
@@ -103,7 +104,7 @@ const structuredData = {
     <meta property="og:title" content={`${brandName} | ${tagline}`} />
     <meta property="og:description" content={homepageCopy.description} />
     <meta property="og:type" content="website" />
-    <meta property="og:image" content={heroUrl} />
+    <meta property="og:image" content={heroOgUrl} />
     {canonicalUrl && <link rel="canonical" href={canonicalUrl} />}
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="anonymous" />
@@ -130,7 +131,7 @@ const structuredData = {
         </nav>
         <div class="header-actions">
           <a class="btn btn-whatsapp" href={whatsappHref(generalMessage)} target="_blank" rel="noopener" aria-label="Hablar con Autos La 15 por WhatsApp">
-            <span class="whatsapp-glyph" aria-hidden="true">WA</span><span>Hablar por WhatsApp</span>
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor" aria-hidden="true"><path d="M17.472 14.382c-.297-.149-1.758-.868-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.297-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.226 1.36.194 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/><path d="M12.001 2C6.478 2 2 6.478 2 12c0 1.85.5 3.657 1.451 5.24L2 22l4.897-1.416A9.945 9.945 0 0 0 12.001 22C17.523 22 22 17.522 22 12S17.523 2 12.001 2zm0 18.062a8.012 8.012 0 0 1-4.088-1.118l-.293-.175-2.902.839.848-2.827-.19-.29A8.06 8.06 0 0 1 3.938 12c0-4.446 3.617-8.062 8.063-8.062S20.063 7.554 20.063 12 16.447 20.062 12.001 20.062z"/></svg><span>Hablar por WhatsApp</span>
           </a>
           <button class="nav-toggle" id="nav-toggle" type="button" aria-label="Abrir navegación" aria-expanded="false" aria-controls="main-nav">
             <span></span><span></span><span></span>
@@ -141,7 +142,7 @@ const structuredData = {
 
     <main id="main-content">
       <section class="hero" aria-labelledby="hero-title">
-        <img class="hero-image" src={heroUrl} alt={siteSettings.heroImage?.alt ?? 'Vehículos exhibidos en la sede de Autos La 15'} width="2400" height="1600" fetchpriority="high" />
+        <img class="hero-image" src={heroSrc} alt="Fachada de Autos La 15 con vehículos en exhibición al atardecer" width={heroImage.width} height={heroImage.height} fetchpriority="high" />
         <div class="hero-overlay" aria-hidden="true"></div>
         <div class="container hero-inner">
           <div class="hero-content">
@@ -171,7 +172,7 @@ const structuredData = {
 
       <section class="section" id="nosotros" aria-labelledby="history-title">
         <div class="container history-grid">
-          <div class="history-media reveal"><img src={historyUrl} alt={siteSettings.historyImage?.alt ?? 'Fachada de Autos La 15 en Maracaibo con vehículos en exhibición'} width="1400" height="1270" loading="lazy" /></div>
+          <div class="history-media reveal"><img src={historySrc} alt="Fachada de Autos La 15 en Maracaibo con vehículos en exhibición" width={whoAreWeImage.width} height={whoAreWeImage.height} loading="lazy" /></div>
           <div class="history-copy">
             <p class="section-eyebrow reveal">Nuestra historia</p>
             <h2 id="history-title" class="reveal">Una familia que conoce el camino</h2>
@@ -249,11 +250,14 @@ const structuredData = {
 
       <section class="section contact-section" id="contacto" aria-labelledby="contact-title">
         <div class="container">
-          <div class="contact-heading reveal"><p class="section-eyebrow">Hablemos claro</p><h2 id="contact-title">Tu próximo vehículo<br />empieza aquí</h2><p>Cuéntanos qué estás buscando, visítanos en Maracaibo o Ciudad Ojeda, o escríbenos directamente por WhatsApp.</p></div>
+          <div class="contact-heading reveal">
+            <div class="contact-heading-title"><h2 id="contact-title">Tu próximo vehículo<br />empieza aquí</h2></div>
+            <div class="contact-heading-copy"><p class="section-eyebrow">Solicita información</p><p class="contact-heading-lead">Cuéntanos qué estás buscando, visítanos en Maracaibo o Ciudad Ojeda, o escríbenos directamente por WhatsApp.</p></div>
+          </div>
           <div class="contact-cards">
             <article class="contact-card reveal"><span class="contact-card-number">01</span><h3>Compra o vende</h3><p>Revisa opciones nuevas, seminuevas y usadas, o conversemos sobre tu vehículo.</p><a class="contact-card-link" href="#catalogo">Ver vehículos <span aria-hidden="true">↗</span></a></article>
             <article class="contact-card reveal"><span class="contact-card-number">02</span><h3>Visítanos</h3><p>Estamos en Maracaibo y Ciudad Ojeda para atenderte durante nuestro horario de atención.</p><div class="contact-card-details"><a href={`tel:${contact.phone ?? ''}`}>{contact.phone}</a>{hours.map((hour) => <span>{hour.label}: {hour.opening} - {hour.closing}</span>)}</div></article>
-            <article class="contact-card reveal"><span class="contact-card-number">03</span><h3>Consulta al equipo</h3><p>Pregúntanos sobre vehículos, financiamiento, garantías o consignación.</p><div class="contact-card-details"><a href={`mailto:${contact.email ?? ''}`}>{contact.email}</a>{siteSettings.socialLinks?.instagram && <a href={siteSettings.socialLinks.instagram} target="_blank" rel="noopener">Instagram @autosla15</a>}</div></article>
+            <article class="contact-card reveal"><span class="contact-card-number">03</span><h3>Consulta al equipo</h3><p>Pregúntanos sobre vehículos, financiamiento, garantías o consignación.</p><div class="contact-card-details"><a class="contact-detail-link" href={`mailto:${contact.email ?? ''}`} aria-label={`Enviar correo a ${contact.email}`}><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2"></rect><path d="m3 7 9 6 9-6"></path></svg><span>{contact.email}</span></a>{siteSettings.socialLinks?.instagram && <a class="contact-detail-link" href={siteSettings.socialLinks.instagram} target="_blank" rel="noopener" aria-label="Visitar el perfil de Instagram de Autos La 15"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="5"></rect><circle cx="12" cy="12" r="4"></circle><circle cx="17.5" cy="6.5" r="1" fill="currentColor" stroke="none"></circle></svg><span>@autosla15</span></a>}</div></article>
           </div>
           <div class="contact-actions reveal"><div class="contact-location"><span class="contact-icon" aria-hidden="true">⌖</span><span><strong>Dónde encontrarnos</strong><br />{locations.map((location, index) => <span>{location.address}{index < locations.length - 1 ? ' · ' : ''}</span>)}</span></div><a class="btn btn-whatsapp contact-cta" href={whatsappHref(generalMessage)} target="_blank" rel="noopener">Hablar por WhatsApp</a></div>
           {mapSrc && <div class="contact-map reveal"><iframe src={mapSrc} width="100%" height="100%" loading="lazy" referrerpolicy="no-referrer-when-downgrade" title={`Mapa de ubicación de ${brandName} en ${firstLocation?.city}`}></iframe></div>}
@@ -265,39 +269,16 @@ const structuredData = {
       <div class="container footer-inner">
         <div class="footer-lockup"><a href="#top" class="brand"><img src="/assets/img/logo.png" alt={`Logo de ${brandName}`} class="brand-logo" width="40" height="40" /><span class="brand-text"><strong>{brandName}</strong></span></a><p>{tagline}</p></div>
         <nav class="footer-nav" aria-label="Navegación del pie de página"><a href="#nosotros">Nuestra historia</a><a href="#catalogo">Vehículos</a><a href="#testimonios">Opiniones</a><a href="#faq">Preguntas</a><a href="#contacto">Contacto</a></nav>
-        <a class="footer-action" href={whatsappHref(generalMessage)} target="_blank" rel="noopener">Hablar por WhatsApp <span aria-hidden="true">↗</span></a>
+        <div class="footer-actions">
+          <a class="footer-action" href={whatsappHref(generalMessage)} target="_blank" rel="noopener">Hablar por WhatsApp <span aria-hidden="true">↗</span></a>
+          {siteSettings.socialLinks?.instagram && <a class="footer-action footer-action-instagram" href={siteSettings.socialLinks.instagram} target="_blank" rel="noopener" aria-label="Visitar el perfil de Instagram de Autos La 15"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="5"></rect><circle cx="12" cy="12" r="4"></circle><circle cx="17.5" cy="6.5" r="1" fill="currentColor" stroke="none"></circle></svg><span>Ver Instagram</span></a>}
+        </div>
         <p class="footer-copy">© 2026 {brandName}. Todos los derechos reservados.</p>
       </div>
     </footer>
 
-    <a href={whatsappHref(generalMessage)} class="whatsapp-fab" id="whatsapp-fab" target="_blank" rel="noopener" aria-label={`Hablar con ${brandName} por WhatsApp`}><span aria-hidden="true">WA</span></a>
+    <a href={whatsappHref(generalMessage)} class="whatsapp-fab" id="whatsapp-fab" target="_blank" rel="noopener" aria-label={`Hablar con ${brandName} por WhatsApp`}><svg viewBox="0 0 24 24" width="26" height="26" fill="currentColor" aria-hidden="true"><path d="M17.472 14.382c-.297-.149-1.758-.868-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.297-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.226 1.36.194 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/><path d="M12.001 2C6.478 2 2 6.478 2 12c0 1.85.5 3.657 1.451 5.24L2 22l4.897-1.416A9.945 9.945 0 0 0 12.001 22C17.523 22 22 17.522 22 12S17.523 2 12.001 2zm0 18.062a8.012 8.012 0 0 1-4.088-1.118l-.293-.175-2.902.839.848-2.827-.19-.29A8.06 8.06 0 0 1 3.938 12c0-4.446 3.617-8.062 8.063-8.062S20.063 7.554 20.063 12 16.447 20.062 12.001 20.062z"/></svg></a>
 
-    <script>
-      const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-      const header = document.querySelector('.site-header');
-      const toggle = document.getElementById('nav-toggle');
-      const closeMenu = () => { if (!header || !toggle) return; header.classList.remove('nav-open'); toggle.classList.remove('open'); toggle.setAttribute('aria-expanded', 'false'); };
-      toggle?.addEventListener('click', () => { const isOpen = header?.classList.toggle('nav-open') ?? false; toggle.classList.toggle('open', isOpen); toggle.setAttribute('aria-expanded', String(isOpen)); });
-      document.querySelectorAll('.main-nav a').forEach((link) => link.addEventListener('click', closeMenu));
-      document.addEventListener('keydown', (event) => { if (event.key === 'Escape') closeMenu(); });
-      window.addEventListener('scroll', () => { header?.classList.toggle('scrolled', window.scrollY > 8); document.getElementById('whatsapp-fab')?.classList.toggle('visible', window.scrollY > 400); }, { passive: true });
-
-      const revealElements = document.querySelectorAll('.reveal');
-      if ('IntersectionObserver' in window && !reducedMotion) {
-        const observer = new IntersectionObserver((entries) => entries.forEach((entry) => { if (entry.isIntersecting || entry.boundingClientRect.bottom < 0) { entry.target.classList.add('is-visible'); observer.unobserve(entry.target); } }), { threshold: 0.12 });
-        revealElements.forEach((element) => observer.observe(element));
-      } else revealElements.forEach((element) => element.classList.add('is-visible'));
-
-      const statNumbers = document.querySelectorAll('[data-count-to]');
-      const animateCount = (element: Element) => { const target = Number(element.getAttribute('data-count-to')); const suffix = element.getAttribute('data-suffix') ?? ''; if (reducedMotion) { element.textContent = `${target}${suffix}`; return; } const start = performance.now(); const step = (now: number) => { const progress = Math.min((now - start) / 1300, 1); element.textContent = `${Math.round(target * (1 - Math.pow(1 - progress, 3)))}${suffix}`; if (progress < 1) requestAnimationFrame(step); else element.textContent = `${target}${suffix}`; }; requestAnimationFrame(step); };
-      const stats = document.querySelector('.stats');
-      if (stats && statNumbers.length) { if ('IntersectionObserver' in window && !reducedMotion) { const statsObserver = new IntersectionObserver((entries) => { if (entries.some((entry) => entry.isIntersecting || entry.boundingClientRect.bottom < 0)) { statNumbers.forEach(animateCount); statsObserver.disconnect(); } }, { threshold: 0.3 }); statsObserver.observe(stats); } else statNumbers.forEach(animateCount); }
-
-      const catalogPages = [...document.querySelectorAll<HTMLElement>('.catalog-page')]; const indicators = [...document.querySelectorAll<HTMLButtonElement>('[data-catalog-indicator]')]; const previousButton = document.querySelector<HTMLButtonElement>('[data-catalog-prev]'); const nextButton = document.querySelector<HTMLButtonElement>('[data-catalog-next]'); const catalogStatus = document.querySelector<HTMLElement>('[data-catalog-status]'); let currentPage = 0;
-      const showCatalogPage = (pageIndex: number) => { if (!catalogPages.length) return; currentPage = Math.max(0, Math.min(pageIndex, catalogPages.length - 1)); catalogPages.forEach((page, index) => { const current = index === currentPage; page.hidden = !current; page.setAttribute('aria-hidden', String(!current)); if (current) page.querySelectorAll('.reveal').forEach((element) => element.classList.add('is-visible')); }); indicators.forEach((indicator, index) => { const current = index === currentPage; indicator.classList.toggle('is-active', current); if (current) indicator.setAttribute('aria-current', 'page'); else indicator.removeAttribute('aria-current'); }); if (previousButton) previousButton.disabled = currentPage === 0; if (nextButton) nextButton.disabled = currentPage === catalogPages.length - 1; if (catalogStatus) catalogStatus.textContent = `Página ${currentPage + 1} de ${catalogPages.length} · 6 vehículos`; };
-      previousButton?.addEventListener('click', () => showCatalogPage(currentPage - 1)); nextButton?.addEventListener('click', () => showCatalogPage(currentPage + 1)); indicators.forEach((indicator) => indicator.addEventListener('click', () => showCatalogPage(Number(indicator.getAttribute('data-catalog-indicator'))))); showCatalogPage(0);
-
-      document.querySelectorAll<HTMLDetailsElement>('.faq-item details').forEach((detail) => detail.addEventListener('toggle', () => { if (detail.open) document.querySelectorAll<HTMLDetailsElement>('.faq-item details[open]').forEach((other) => { if (other !== detail) other.removeAttribute('open'); }); }));
-    </script>
+    <script src="../scripts/homepage.js"></script>
   </body>
 </html>
