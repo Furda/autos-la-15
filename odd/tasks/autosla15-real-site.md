@@ -51,11 +51,11 @@ Build the production website behind the provisional static site using Astro, San
 
 ### Delivery and verification
 
-- [ ] Add a Sanity webhook or Vercel deploy hook so published CMS edits trigger a rebuild.
-- [ ] Link the real site to a separate Vercel project from the provisional deployment.
-- [ ] Run typecheck/build, structural checks, browser checks at desktop and mobile widths, and link/asset validation.
-- [ ] Create a first work-unit commit containing the foundation and record its identity here.
-- [ ] Deploy a preview, verify it, then deploy production only after the autonomous checks pass.
+- [ ] Add a Sanity webhook or Vercel deploy hook so published CMS edits trigger a rebuild. Blocked because Vercel requires the project to be connected to a Git repository before deploy hooks can be created.
+- [x] Link the real site to a separate Vercel project from the provisional deployment.
+- [x] Run typecheck/build, structural checks, browser checks at desktop and mobile widths, and link/asset validation.
+- [x] Create a first work-unit commit containing the foundation and record its identity here.
+- [x] Deploy a preview, verify it, then deploy production only after the autonomous checks pass.
 
 ## No-user-action assumptions
 
@@ -85,6 +85,14 @@ Build the production website behind the provisional static site using Astro, San
 - Runtime harness: N/A for this foundation unit; the static build route output is the runtime boundary verified here.
 - Asset verification compared SHA-256 hashes for 15 source files under `provisional/assets/{img,autos}` and 15 copied files under `public/assets`; result: `source_files=15 copied_files=15 mismatches=0`.
 - `provisional/` was not modified by this work unit. No deployment was run.
+
+## Work unit 4 evidence
+
+- Separate Vercel project created: `autosla15-real`.
+- Environment configured for Production and Preview: `SANITY_PROJECT_ID`, `SANITY_DATASET`, `SANITY_API_VERSION`, and `PUBLIC_SITE_URL=https://autosla15-real.vercel.app`.
+- Production deployment completed and aliased to `https://autosla15-real.vercel.app`.
+- Live checks passed: homepage HTTP 200, `/studio` HTTP 200, `/sitemap-index.xml` HTTP 200, canonical metadata present, and `AutoDealer` JSON-LD present.
+- Vercel deploy-hook creation was attempted and refused because the project is not connected to a Git repository. No blind retry was performed.
 
 ## Work unit 2 evidence
 
