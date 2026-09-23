@@ -2,9 +2,10 @@ import { defineConfig } from 'sanity';
 import { structureTool, type StructureBuilder } from 'sanity/structure';
 import { schemaTypes } from './src/sanity/schemaTypes';
 
-const env = import.meta.env as Record<string, string | undefined>;
-const projectId = env.SANITY_PROJECT_ID ?? process.env.SANITY_PROJECT_ID;
-const dataset = env.SANITY_DATASET ?? process.env.SANITY_DATASET ?? 'production';
+const viteEnv = import.meta.env as Record<string, string | undefined>;
+const nodeEnv = typeof process === 'undefined' ? undefined : process.env;
+const projectId = viteEnv.SANITY_PROJECT_ID ?? nodeEnv?.SANITY_PROJECT_ID;
+const dataset = viteEnv.SANITY_DATASET ?? nodeEnv?.SANITY_DATASET ?? 'production';
 
 if (!projectId) {
   throw new Error('SANITY_PROJECT_ID is required to load Sanity Studio.');

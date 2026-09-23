@@ -88,4 +88,16 @@ export const siteSettings = defineType({
       fields: [defineField({ name: 'alt', title: 'Texto alternativo', type: 'string', validation: (Rule) => Rule.required() })],
     }),
   ],
+  preview: {
+    select: {
+      title: 'identity.brandName',
+      subtitle: 'identity.tagline',
+    },
+    prepare({ title, subtitle }) {
+      return {
+        title: title || 'Configuración del sitio',
+        subtitle,
+      };
+    },
+  },
 });
