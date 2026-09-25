@@ -79,44 +79,61 @@ if (stats && statNumbers.length) {
   }
 }
 
-const showcaseLinks = [...document.querySelectorAll('[data-showcase-link]')];
-const showcasePanels = [...document.querySelectorAll('[data-showcase-panel]')];
-const setActiveVehicle = (index) => {
-  showcaseLinks.forEach((link, linkIndex) => {
-    const current = linkIndex === index;
-    link.classList.toggle('is-active', current);
-    if (current) link.setAttribute('aria-current', 'true');
-    else link.removeAttribute('aria-current');
-    if (!current) return;
-    const behavior = reducedMotion ? 'auto' : 'smooth';
-    const list = link.closest('ol');
-    if (list && list.scrollWidth > list.clientWidth + 4) {
-      list.scrollTo({ left: Math.max(0, link.offsetLeft - 16), behavior });
-    }
-    const rail = link.closest('.showcase-rail');
-    if (rail && rail.scrollHeight > rail.clientHeight + 4) {
-      const top = link.offsetTop - rail.offsetTop;
-      const visibleStart = rail.scrollTop;
-      const visibleEnd = visibleStart + rail.clientHeight;
-      if (top < visibleStart || top + link.offsetHeight > visibleEnd) {
-        rail.scrollTo({ top: Math.max(0, top - 12), behavior });
-      }
-    }
+const slideshowTrack = document.querySelector('[data-slideshow-track]');
+const slideshowSlides = [...document.querySelectorAll('[data-slideshow-slide]')];
+const slideshowDots = [...document.querySelectorAll('[data-slideshow-dot]')];
+const slideshowPrev = document.querySelector('[data-slideshow-prev]');
+const slideshowNext = document.querySelector('[data-slideshow-next]');
+const slideshowStatus = document.querySelector('[data-slideshow-status]');
+const slideshowBehavior = reducedMotion ? 'auto' : 'smooth';
+let slideshowIndex = 0;
+const setSlideshowIndex = (index) => {
+  if (!slideshowSlides.length) return;
+  slideshowIndex = Math.max(0, Math.min(index, slideshowSlides.length - 1));
+  slideshowDots.forEach((dot, dotIndex) => {
+    const current = dotIndex === slideshowIndex;
+    dot.classList.toggle('is-active', current);
+    dot.setAttribute('aria-selected', String(current));
   });
+  if (slideshowPrev) slideshowPrev.disabled = slideshowIndex === 0;
+  if (slideshowNext) slideshowNext.disabled = slideshowIndex === slideshowSlides.length - 1;
+  if (slideshowStatus) slideshowStatus.textContent = `${slideshowIndex + 1} de ${slideshowSlides.length}`;
 };
-if (showcasePanels.length && 'IntersectionObserver' in window) {
-  const showcaseObserver = new IntersectionObserver(
+const goToSlide = (index) => {
+  const slide = slideshowSlides[index];
+  if (!slide || !slideshowTrack) return;
+  slideshowTrack.scrollTo({ left: slide.offsetLeft, behavior: slideshowBehavior });
+  setSlideshowIndex(index);
+};
+slideshowPrev?.addEventListener('click', () => goToSlide(slideshowIndex - 1));
+slideshowNext?.addEventListener('click', () => goToSlide(slideshowIndex + 1));
+slideshowDots.forEach((dot) => {
+  dot.addEventListener('click', () => goToSlide(Number(dot.getAttribute('data-slideshow-dot'))));
+});
+slideshowTrack?.addEventListener('keydown', (event) => {
+  if (event.key === 'ArrowRight') {
+    event.preventDefault();
+    goToSlide(slideshowIndex + 1);
+  }
+  if (event.key === 'ArrowLeft') {
+    event.preventDefault();
+    goToSlide(slideshowIndex - 1);
+  }
+});
+if (slideshowTrack && slideshowSlides.length && 'IntersectionObserver' in window) {
+  const slideshowObserver = new IntersectionObserver(
     (entries) => {
       const visible = entries
         .filter((entry) => entry.isIntersecting)
         .sort((left, right) => right.intersectionRatio - left.intersectionRatio)[0];
       if (!visible) return;
-      setActiveVehicle(Number(visible.target.getAttribute('data-showcase-panel')));
+      setSlideshowIndex(Number(visible.target.getAttribute('data-slideshow-slide')));
     },
-    { threshold: [0.45, 0.65] },
+    { root: slideshowTrack, threshold: [0.6, 0.85] },
   );
-  showcasePanels.forEach((panel) => showcaseObserver.observe(panel));
+  slideshowSlides.forEach((slide) => slideshowObserver.observe(slide));
 }
+setSlideshowIndex(0);
 
 const faqDetails = [...document.querySelectorAll('.faq-item details')];
 const faqDuration = 220;
