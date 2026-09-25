@@ -79,37 +79,44 @@ if (stats && statNumbers.length) {
   }
 }
 
-const catalogPages = [...document.querySelectorAll('.catalog-page')];
-const indicators = [...document.querySelectorAll('[data-catalog-indicator]')];
-const previousButton = document.querySelector('[data-catalog-prev]');
-const nextButton = document.querySelector('[data-catalog-next]');
-const catalogStatus = document.querySelector('[data-catalog-status]');
-let currentPage = 0;
-const showCatalogPage = (pageIndex) => {
-  if (!catalogPages.length) return;
-  currentPage = Math.max(0, Math.min(pageIndex, catalogPages.length - 1));
-  catalogPages.forEach((page, index) => {
-    const current = index === currentPage;
-    page.hidden = !current;
-    page.setAttribute('aria-hidden', String(!current));
-    if (current) page.querySelectorAll('.reveal').forEach((element) => element.classList.add('is-visible'));
+const showcaseLinks = [...document.querySelectorAll('[data-showcase-link]')];
+const showcasePanels = [...document.querySelectorAll('[data-showcase-panel]')];
+const setActiveVehicle = (index) => {
+  showcaseLinks.forEach((link, linkIndex) => {
+    const current = linkIndex === index;
+    link.classList.toggle('is-active', current);
+    if (current) link.setAttribute('aria-current', 'true');
+    else link.removeAttribute('aria-current');
+    if (!current) return;
+    const behavior = reducedMotion ? 'auto' : 'smooth';
+    const list = link.closest('ol');
+    if (list && list.scrollWidth > list.clientWidth + 4) {
+      list.scrollTo({ left: Math.max(0, link.offsetLeft - 16), behavior });
+    }
+    const rail = link.closest('.showcase-rail');
+    if (rail && rail.scrollHeight > rail.clientHeight + 4) {
+      const top = link.offsetTop - rail.offsetTop;
+      const visibleStart = rail.scrollTop;
+      const visibleEnd = visibleStart + rail.clientHeight;
+      if (top < visibleStart || top + link.offsetHeight > visibleEnd) {
+        rail.scrollTo({ top: Math.max(0, top - 12), behavior });
+      }
+    }
   });
-  indicators.forEach((indicator, index) => {
-    const current = index === currentPage;
-    indicator.classList.toggle('is-active', current);
-    if (current) indicator.setAttribute('aria-current', 'page');
-    else indicator.removeAttribute('aria-current');
-  });
-  if (previousButton) previousButton.disabled = currentPage === 0;
-  if (nextButton) nextButton.disabled = currentPage === catalogPages.length - 1;
-  if (catalogStatus) catalogStatus.textContent = `Página ${currentPage + 1} de ${catalogPages.length} · 6 vehículos`;
 };
-previousButton?.addEventListener('click', () => showCatalogPage(currentPage - 1));
-nextButton?.addEventListener('click', () => showCatalogPage(currentPage + 1));
-indicators.forEach((indicator) =>
-  indicator.addEventListener('click', () => showCatalogPage(Number(indicator.getAttribute('data-catalog-indicator')))),
-);
-showCatalogPage(0);
+if (showcasePanels.length && 'IntersectionObserver' in window) {
+  const showcaseObserver = new IntersectionObserver(
+    (entries) => {
+      const visible = entries
+        .filter((entry) => entry.isIntersecting)
+        .sort((left, right) => right.intersectionRatio - left.intersectionRatio)[0];
+      if (!visible) return;
+      setActiveVehicle(Number(visible.target.getAttribute('data-showcase-panel')));
+    },
+    { threshold: [0.45, 0.65] },
+  );
+  showcasePanels.forEach((panel) => showcaseObserver.observe(panel));
+}
 
 const faqDetails = [...document.querySelectorAll('.faq-item details')];
 const faqDuration = 220;

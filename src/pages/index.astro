@@ -52,8 +52,9 @@ const cars = await sanityClient.fetch<Car[]>(`*[_type == "car" && status in ["av
 const config = sanityClient.config();
 if (!config.projectId || !config.dataset) throw new Error('Sanity project configuration is required to build image URLs.');
 const imageBuilder = createImageUrlBuilder({ projectId: config.projectId, dataset: config.dataset });
-const imageUrl = (image: SanityImage | undefined, width: number, height: number) =>
-  image?.asset?._ref ? imageBuilder.image(image).width(width).height(height).fit('crop').auto('format').url() : '';
+const imageUrl = (image: SanityImage | undefined, width: number) =>
+  image?.asset?._ref ? imageBuilder.image(image).width(width).auto('format').fit('max').url() : '';
+const conditionLabel = (car: Car) => (car.status === 'reserved' ? 'Reservado' : car.badge || 'Disponible');
 
 const homepageCopy = siteSettings.homepageCopy ?? {};
 const brandName = siteSettings.identity?.brandName ?? 'AUTOS LA 15';
@@ -76,8 +77,6 @@ const canonicalUrl = siteUrl ? new URL('/', siteUrl).toString() : undefined;
 const heroOgUrl = siteUrl ? new URL(heroSrc, siteUrl).toString() : heroSrc;
 const formatPrice = (price: number) =>
   new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(price);
-const pages: Car[][] = [];
-for (let index = 0; index < cars.length; index += 6) pages.push(cars.slice(index, index + 6));
 
 const structuredData = {
   '@context': 'https://schema.org',
@@ -182,41 +181,75 @@ const structuredData = {
         </div>
       </section>
 
-      <section class="section section-alt" id="catalogo" aria-labelledby="catalog-title">
-        <div class="container">
+      <section class="showcase" id="catalogo" aria-labelledby="catalog-title">
+        <div class="container showcase-intro">
           <p class="section-eyebrow reveal">Vehículos disponibles</p>
           <h2 id="catalog-title" class="reveal">{homepageCopy.catalogHeading}</h2>
-          <p class="section-lead reveal">Conoce nuestra selección de vehículos nuevos y usados. Los precios mostrados corresponden a la actualización de septiembre.</p>
-          <div class="catalog-pages">
-            {pages.map((page, pageIndex) => (
-              <div class="catalog-page" data-catalog-page={pageIndex} aria-label={`Página ${pageIndex + 1} del catálogo`} hidden={pageIndex !== 0}>
-                <div class="catalog-grid">
-                  {page.map((car) => (
-                    <article class="car-card reveal" data-car-id={car._id}>
-                      <div class="car-media">
-                        <img src={imageUrl(car.image, 1000, 690)} alt={car.image?.alt ?? `${car.name}, vehículo de Autos La 15`} width="1000" height="690" loading="lazy" />
-                        {car.badge && <span class="badge">{car.badge}</span>}
-                        {car.status === 'reserved' && <span class="badge badge-reserved">Reservado</span>}
+          <p class="section-lead reveal">Conoce nuestra selección de vehículos nuevos y usados. Recorre cada uno a pantalla completa. Los precios mostrados corresponden a la actualización de septiembre.</p>
+        </div>
+        {cars.length > 0 ? (
+          <div class="showcase-body">
+            <nav class="showcase-rail" aria-label="Índice de vehículos">
+              <p class="showcase-rail-label">Inventario</p>
+              <ol>
+                {cars.map((car, index) => (
+                  <li>
+                    <a href={`#vehiculo-${car._id}`} data-showcase-link={index} class:list={[index === 0 && 'is-active']} aria-current={index === 0 ? 'true' : undefined}>
+                      <span class="showcase-rail-index">{String(index + 1).padStart(2, '0')}</span>
+                      <span>{car.name}</span>
+                    </a>
+                  </li>
+                ))}
+              </ol>
+            </nav>
+            <div class="showcase-panels">
+              {cars.map((car, index) => {
+                const nextCar = cars[index + 1];
+                return (
+                  <article class="vehicle-panel" id={`vehiculo-${car._id}`} data-showcase-panel={index} aria-labelledby={`vehiculo-titulo-${car._id}`}>
+                    <div class="vehicle-layout">
+                      <div class="vehicle-copy">
+                        <p class="vehicle-kicker">{conditionLabel(car)} · {car.year}</p>
+                        <h3 id={`vehiculo-titulo-${car._id}`}>{car.name}</h3>
+                        <p class="vehicle-price">{formatPrice(car.price)}</p>
+                        {car.description && <p class="vehicle-desc">{car.description}</p>}
+                        <a class="btn btn-primary" target="_blank" rel="noopener" href={whatsappHref(car.whatsappMessage ?? `Hola AUTOS LA 15, me interesa el ${car.name}. ¿Me comparten más información?`)}>Consultar vehículo</a>
                       </div>
-                      <div class="car-body">
-                        <h3>{car.name}</h3>
-                        <p class="car-desc">{car.description}</p>
-                        <div class="car-foot"><span class="car-price">{formatPrice(car.price)}</span><a class="btn btn-sm btn-primary" target="_blank" rel="noopener" href={whatsappHref(car.whatsappMessage ?? `Hola AUTOS LA 15, me interesa el ${car.name}. ¿Me comparten más información?`)}>Consultar vehículo</a></div>
+                      <div class="vehicle-photo">
+                        <img src={imageUrl(car.image, 1600)} alt={car.image?.alt ?? `${car.name}, vehículo de Autos La 15`} width="1080" height="1080" loading={index === 0 ? 'eager' : 'lazy'} />
                       </div>
-                    </article>
-                  ))}
-                </div>
-              </div>
-            ))}
-          </div>
-          <nav class="catalog-controls" aria-label="Paginación del catálogo">
-            <button class="catalog-control" type="button" data-catalog-prev aria-label="Ver página anterior del catálogo">Anterior</button>
-            <div class="catalog-indicators" role="group" aria-label="Páginas del catálogo">
-              {pages.map((_, index) => <button class:list={['page-indicator', index === 0 && 'is-active']} type="button" data-catalog-indicator={index} aria-label={`Ver página ${index + 1}`} aria-current={index === 0 ? 'page' : undefined}>{String(index + 1).padStart(2, '0')}</button>)}
+                    </div>
+                    {nextCar && (
+                      <a class="vehicle-next" href={`#vehiculo-${nextCar._id}`}>
+                        Siguiente vehículo
+                        <span aria-hidden="true">↓</span>
+                      </a>
+                    )}
+                    <dl class="vehicle-specs">
+                      <div>
+                        <dt>Año</dt>
+                        <dd>{car.year}</dd>
+                      </div>
+                      <div>
+                        <dt>Estado</dt>
+                        <dd>{conditionLabel(car)}</dd>
+                      </div>
+                      <div>
+                        <dt>Precio</dt>
+                        <dd>{formatPrice(car.price)}</dd>
+                      </div>
+                    </dl>
+                  </article>
+                );
+              })}
             </div>
-            <p class="catalog-status" data-catalog-status aria-live="polite">Página 1 de {pages.length} · 6 vehículos</p>
-            <button class="catalog-control" type="button" data-catalog-next aria-label="Ver página siguiente del catálogo">Siguiente</button>
-          </nav>
+          </div>
+        ) : (
+          <div class="container">
+            <p class="section-lead">En este momento no hay vehículos publicados. Escríbenos y te contamos qué está por llegar.</p>
+          </div>
+        )}
+        <div class="container">
           <p class="catalog-note reveal">¿Quieres vender o dejar tu vehículo en consignación? <a href="#faq">Conoce el proceso</a>.</p>
         </div>
       </section>
