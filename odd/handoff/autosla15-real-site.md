@@ -23,6 +23,8 @@ Cuando exista dominio propio (ej. `www.autosla15.com`), se configurará en Verce
 2. Iniciar sesión con la cuenta de Sanity que el equipo haya invitado al proyecto.
 3. Si no hay acceso, pedir una invitación al administrador del proyecto Sanity (`7mz74qpp`).
 
+Si aparece la pantalla **“Connect this Studio to your project”** en producción, el administrador debe **Registrar studio** (o ejecutar una vez `npx sanity@latest deploy --external --url https://autos-la-15.vercel.app/studio` desde el repo). También hace falta el origen CORS `https://autos-la-15.vercel.app` con credenciales en [Sanity Manage → API](https://www.sanity.io/manage).
+
 ### Qué se puede editar
 
 - **Vehículos (`car`):** título, año, precio, descripción, foto, estado (`available`, `reserved`, `sold`, `archived`), destacado, badge, mensaje de WhatsApp, etc.
@@ -75,7 +77,7 @@ Ya configuradas en **Production** y **Preview**:
 - `SANITY_API_VERSION=2026-09-21`
 - `PUBLIC_SITE_URL=https://autos-la-15.vercel.app`
 
-Al cambiar el dominio final, actualizar `PUBLIC_SITE_URL` y volver a desplegar.
+Al cambiar el dominio final, actualizar `PUBLIC_SITE_URL`, añadir CORS + volver a registrar el Studio con la nueva URL (`sanity deploy --external --url https://<dominio>/studio`), y redeploy en Vercel.
 
 ### Desarrollo local
 

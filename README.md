@@ -33,6 +33,17 @@ For a production-like local build, set `PUBLIC_SITE_URL` (see `.env.example`).
 | `npm run build` | Static output to `dist/` |
 | `npm run seed:sanity` | One-time / safe re-run seed (`SANITY_TOKEN` required) |
 
+## Sanity Studio on production (one-time per URL)
+
+Embedded Studio at `/studio` must be **registered** with the Sanity project and allowed in **CORS** (origin `https://autos-la-15.vercel.app`, credentials on). From the repo (logged-in Sanity CLI):
+
+```bash
+npx sanity cors add https://autos-la-15.vercel.app --credentials -p 7mz74qpp -y
+npx sanity@latest deploy --external --url https://autos-la-15.vercel.app/studio -y
+```
+
+Repeat with the new origin/URL when the public domain changes. See `sanity.cli.ts` (`basePath: '/studio'`).
+
 ## CMS redeploy wiring
 
 Published edits to `car` and `siteSettings` trigger a Vercel rebuild via Sanity webhook → deploy hook. Ops details and IDs are in the handoff doc. To (re)create the Sanity webhook locally:
