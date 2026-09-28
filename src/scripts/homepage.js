@@ -90,6 +90,7 @@ let slideshowIndex = 0;
 const setSlideshowIndex = (index) => {
   if (!slideshowSlides.length) return;
   slideshowIndex = Math.max(0, Math.min(index, slideshowSlides.length - 1));
+  slideshowSlides.forEach((slide, slideIndex) => slide.classList.toggle('is-active', slideIndex === slideshowIndex));
   slideshowDots.forEach((dot, dotIndex) => {
     const current = dotIndex === slideshowIndex;
     dot.classList.toggle('is-active', current);
@@ -99,10 +100,33 @@ const setSlideshowIndex = (index) => {
   if (slideshowNext) slideshowNext.disabled = slideshowIndex === slideshowSlides.length - 1;
   if (slideshowStatus) slideshowStatus.textContent = `${slideshowIndex + 1} de ${slideshowSlides.length}`;
 };
+const slideScrollLeft = (slide) => {
+  if (!slide || !slideshowTrack) return 0;
+  return slide.offsetLeft - (slideshowTrack.clientWidth - slide.clientWidth) / 2;
+};
+const syncSlideshowIndex = () => {
+  if (!slideshowTrack || !slideshowSlides.length) return;
+  const trackRect = slideshowTrack.getBoundingClientRect();
+  const trackCenter = trackRect.left + trackRect.width / 2;
+  let best = 0;
+  let bestDistance = Number.POSITIVE_INFINITY;
+  slideshowSlides.forEach((slide, index) => {
+    const slideRect = slide.getBoundingClientRect();
+    const slideCenter = slideRect.left + slideRect.width / 2;
+    const distance = Math.abs(slideCenter - trackCenter);
+    if (distance < bestDistance) {
+      bestDistance = distance;
+      best = index;
+    }
+  });
+  if (best !== slideshowIndex) setSlideshowIndex(best);
+};
 const goToSlide = (index) => {
   const slide = slideshowSlides[index];
   if (!slide || !slideshowTrack) return;
-  slideshowTrack.scrollTo({ left: slide.offsetLeft, behavior: slideshowBehavior });
+  const maxScroll = slideshowTrack.scrollWidth - slideshowTrack.clientWidth;
+  const left = Math.min(maxScroll, Math.max(0, slideScrollLeft(slide)));
+  slideshowTrack.scrollTo({ left, behavior: slideshowBehavior });
   setSlideshowIndex(index);
 };
 slideshowPrev?.addEventListener('click', () => goToSlide(slideshowIndex - 1));
@@ -120,20 +144,17 @@ slideshowTrack?.addEventListener('keydown', (event) => {
     goToSlide(slideshowIndex - 1);
   }
 });
-if (slideshowTrack && slideshowSlides.length && 'IntersectionObserver' in window) {
-  const slideshowObserver = new IntersectionObserver(
-    (entries) => {
-      const visible = entries
-        .filter((entry) => entry.isIntersecting)
-        .sort((left, right) => right.intersectionRatio - left.intersectionRatio)[0];
-      if (!visible) return;
-      setSlideshowIndex(Number(visible.target.getAttribute('data-slideshow-slide')));
-    },
-    { root: slideshowTrack, threshold: [0.6, 0.85] },
-  );
-  slideshowSlides.forEach((slide) => slideshowObserver.observe(slide));
-}
-setSlideshowIndex(0);
+let slideshowScrollFrame = 0;
+slideshowTrack?.addEventListener(
+  'scroll',
+  () => {
+    if (slideshowScrollFrame) cancelAnimationFrame(slideshowScrollFrame);
+    slideshowScrollFrame = requestAnimationFrame(syncSlideshowIndex);
+  },
+  { passive: true },
+);
+window.addEventListener('resize', () => goToSlide(slideshowIndex), { passive: true });
+if (slideshowSlides.length) goToSlide(0);
 
 const faqDetails = [...document.querySelectorAll('.faq-item details')];
 const faqDuration = 220;
