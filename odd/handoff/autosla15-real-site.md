@@ -28,7 +28,8 @@ Si aparece la pantalla **“Connect this Studio to your project”** en producci
 ### Qué se puede editar
 
 - **Vehículos (`car`):** título, año, precio, descripción, foto, estado (`available`, `reserved`, `sold`, `archived`), destacado, badge, mensaje de WhatsApp, etc.
-- **Ajustes del sitio (`siteSettings`):** textos de inicio, contacto, horarios, direcciones, redes, bloques editoriales.
+- **Configuración del sitio (`siteSettings`):** logo, menú, pie de página, contacto, horarios, direcciones, redes, mensajes de WhatsApp y SEO.
+- **Página: Inicio (`homePage`):** portada, datos, historia, textos del catálogo, testimonios, preguntas frecuentes y bloque de contacto (textos e imágenes).
 
 ### Publicar cambios en la web
 
@@ -95,7 +96,7 @@ Semilla inicial (solo si hace falta repoblar): `npm run seed:sanity` (requiere `
 ### Webhook / deploy hook (referencia)
 
 - Vercel deploy hook: **`sanity-cms-rebuild`** → rama `main`.
-- Sanity webhook: **Vercel production rebuild (CMS publish)** — documentos `car` y `siteSettings`.
+- Sanity webhook: **Vercel production rebuild (CMS publish)** — documentos `car`, `siteSettings` y `homePage` (actualizar el filtro en Sanity Manage si el webhook ya existía con la lista antigua).
 - Reconfiguración: `node --env-file=.env scripts/setup-cms-redeploy-webhook.mjs` (requiere `VERCEL_DEPLOY_HOOK_URL` en `.env` local).
 
 ### Sitio provisional

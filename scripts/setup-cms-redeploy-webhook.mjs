@@ -31,14 +31,9 @@ if (!listResponse.ok) {
   process.exit(1);
 }
 
-const existing = await listResponse.json();
-const already = existing.find((hook) => hook.name === hookName);
-if (already) {
-  console.log(`Webhook already exists id=${already.id} name="${already.name}"`);
-  process.exit(0);
-}
+const documentFilter = '_type in ["car", "siteSettings", "homePage"]';
 
-const body = {
+const webhookBody = {
   name: hookName,
   url: deployHookUrl,
   dataset: process.env.SANITY_DATASET ?? 'production',
@@ -47,11 +42,38 @@ const body = {
   apiVersion: hooksApiVersion,
   rule: {
     on: ['create', 'update', 'delete'],
-    filter: '_type in ["car", "siteSettings"]',
+    filter: documentFilter,
     projection: '{_id}',
   },
   httpMethod: 'POST',
 };
+
+const existing = await listResponse.json();
+const already = existing.find((hook) => hook.name === hookName);
+if (already) {
+  const currentFilter = already.rule?.filter;
+  if (currentFilter === documentFilter) {
+    console.log(`Webhook already up to date id=${already.id} name="${already.name}"`);
+    process.exit(0);
+  }
+
+  const response = await fetch(`${hooksBase}/${already.id}`, {
+    method: 'PUT',
+    headers: {
+      Authorization: `Bearer ${token}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ ...already, ...webhookBody, id: already.id }),
+  });
+
+  if (!response.ok) {
+    console.error(`Sanity webhook update failed (${response.status}): ${await response.text()}`);
+    process.exit(1);
+  }
+
+  console.log(`Updated Sanity webhook id=${already.id} filter="${documentFilter}"`);
+  process.exit(0);
+}
 
 const response = await fetch(hooksBase, {
   method: 'POST',
@@ -59,7 +81,7 @@ const response = await fetch(hooksBase, {
     Authorization: `Bearer ${token}`,
     'Content-Type': 'application/json',
   },
-  body: JSON.stringify(body),
+  body: JSON.stringify(webhookBody),
 });
 
 if (!response.ok) {
