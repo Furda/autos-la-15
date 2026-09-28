@@ -11,8 +11,6 @@ if (!projectId) {
   throw new Error('SANITY_PROJECT_ID is required to load Sanity Studio.');
 }
 
-const singletonIds = new Set(['siteSettings', 'homePage']);
-
 const structure = (S: StructureBuilder) =>
   S.list()
     .title('Contenido')
@@ -21,12 +19,8 @@ const structure = (S: StructureBuilder) =>
         .title('Configuración del sitio')
         .id('siteSettings')
         .child(S.document().schemaType('siteSettings').documentId('siteSettings')),
-      S.listItem()
-        .title('Página: Inicio')
-        .id('homePage')
-        .child(S.document().schemaType('homePage').documentId('homePage')),
       S.divider(),
-      ...S.documentTypeListItems().filter((item) => !singletonIds.has(item.getId() ?? '')),
+      ...S.documentTypeListItems().filter((item) => item.getId() !== 'siteSettings'),
     ]);
 
 export default defineConfig({

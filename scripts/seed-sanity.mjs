@@ -148,18 +148,12 @@ const editorialAssets = [
   {
     key: 'heroImage',
     image: 'hero.jpg',
-    alt: 'Fachada de Autos La 15 con vehículos en exhibición al atardecer',
+    alt: 'Vehículos exhibidos en la sede de Autos La 15',
   },
   {
     key: 'historyImage',
     image: 'who-are-we-section.jpg',
     alt: 'Fachada de Autos La 15 en Maracaibo con vehículos en exhibición',
-  },
-  {
-    key: 'logoImage',
-    image: 'logo.png',
-    alt: 'Logo de AUTOS LA 15',
-    contentType: 'image/png',
   },
 ];
 
@@ -219,7 +213,7 @@ const loadEditorialAssets = async () => {
   return loaded;
 };
 
-const getOrUploadImage = async ({ image, buffer, sha1, contentType }) => {
+const getOrUploadImage = async ({ image, buffer, sha1 }) => {
   const existingAssetId = await client.fetch(
     '*[_type == "sanity.imageAsset" && sha1hash == $sha1][0]._id',
     { sha1 },
@@ -231,7 +225,7 @@ const getOrUploadImage = async ({ image, buffer, sha1, contentType }) => {
 
   const asset = await client.assets.upload('image', buffer, {
     filename: image,
-    contentType: contentType ?? 'image/jpeg',
+    contentType: 'image/jpeg',
   });
 
   return { assetId: asset._id, uploaded: true };
@@ -263,18 +257,13 @@ const seedCar = async (vehicle, assetId) => {
   await client.createOrReplace(document);
 };
 
-const seedSiteSettings = async ({ logoAssetId }) => {
+const seedSiteSettings = async ({ heroAssetId, historyAssetId }) => {
   await client.createOrReplace({
     _id: 'siteSettings',
     _type: 'siteSettings',
     identity: {
       brandName: 'AUTOS LA 15',
       tagline: 'Compra con claridad. Vende con confianza.',
-      logo: {
-        _type: 'image',
-        asset: { _type: 'reference', _ref: logoAssetId },
-        alt: 'Logo de AUTOS LA 15',
-      },
     },
     contact: {
       phone: '+58 412-6916722',
@@ -301,198 +290,22 @@ const seedSiteSettings = async ({ logoAssetId }) => {
     socialLinks: {
       instagram: 'https://instagram.com/autosla15/',
     },
-    navigation: {
-      mainLinks: [
-        { _key: 'nav-history', label: 'Nuestra historia', href: '#nosotros' },
-        { _key: 'nav-catalog', label: 'Vehículos', href: '#catalogo' },
-        { _key: 'nav-testimonials', label: 'Opiniones', href: '#testimonios' },
-        { _key: 'nav-faq', label: 'Preguntas', href: '#faq' },
-        { _key: 'nav-contact', label: 'Contacto', href: '#contacto' },
-      ],
-      whatsappButtonLabel: 'Hablar por WhatsApp',
-    },
-    footer: {
-      links: [
-        { _key: 'footer-history', label: 'Nuestra historia', href: '#nosotros' },
-        { _key: 'footer-catalog', label: 'Vehículos', href: '#catalogo' },
-        { _key: 'footer-testimonials', label: 'Opiniones', href: '#testimonios' },
-        { _key: 'footer-faq', label: 'Preguntas', href: '#faq' },
-        { _key: 'footer-contact', label: 'Contacto', href: '#contacto' },
-      ],
-      whatsappActionLabel: 'Hablar por WhatsApp',
-      instagramActionLabel: 'Ver Instagram',
-      copyright: '© {year} {brand}. Todos los derechos reservados.',
-    },
-    messaging: {
-      defaultWhatsappMessage: 'Hola AUTOS LA 15, quiero más información',
-      whatsappFabLabel: 'Hablar con {brand} por WhatsApp',
-    },
-    seo: {
-      metaDescription:
+    homepageCopy: {
+      eyebrow: 'Familia zuliana desde 2005',
+      title: 'Compra con claridad. Vende con confianza.',
+      description:
         'Desde Maracaibo y Ciudad Ojeda, te acompañamos a comprar o vender tu vehículo con información clara y atención cercana.',
+      catalogHeading: 'Revisa el inventario con calma',
     },
-  });
-};
-
-const seedHomePage = async ({ heroAssetId, historyAssetId }) => {
-  await client.createOrReplace({
-    _id: 'homePage',
-    _type: 'homePage',
-    hero: {
-      image: {
-        _type: 'image',
-        asset: { _type: 'reference', _ref: heroAssetId },
-        alt: 'Fachada de Autos La 15 con vehículos en exhibición al atardecer',
-      },
-      intro: {
-        eyebrow: 'Familia zuliana desde 2005',
-        title: 'Compra con claridad. Vende con confianza.',
-        lead: 'Desde Maracaibo y Ciudad Ojeda, te acompañamos a comprar o vender tu vehículo con información clara y atención cercana.',
-      },
-      primaryCta: { label: 'Ver vehículos', href: '#catalogo' },
-      secondaryCta: { label: 'Hablar por WhatsApp', href: 'whatsapp', openInNewTab: true },
-      scrollHint: 'Ver vehículos disponibles ↓',
+    heroImage: {
+      _type: 'image',
+      asset: { _type: 'reference', _ref: heroAssetId },
+      alt: 'Vehículos exhibidos en la sede de Autos La 15',
     },
-    stats: {
-      intro: {
-        eyebrow: 'Una trayectoria que conoces',
-        lead: 'Datos concretos de una familia que trabaja en el Zulia desde 2005.',
-      },
-      items: [
-        { _key: 'stat-year', value: 2005, label: 'Año en que comenzamos' },
-        { _key: 'stat-years', value: 20, suffix: '+', label: 'Más de 20 años de trayectoria' },
-        { _key: 'stat-cities', value: 2, label: 'Ciudades: Maracaibo y Ciudad Ojeda' },
-        { _key: 'stat-papers', value: 100, suffix: '%', label: 'Papeles originales' },
-      ],
-    },
-    history: {
-      image: {
-        _type: 'image',
-        asset: { _type: 'reference', _ref: historyAssetId },
-        alt: 'Fachada de Autos La 15 en Maracaibo con vehículos en exhibición',
-      },
-      eyebrow: 'Nuestra historia',
-      title: 'Una familia que conoce el camino',
-      paragraphs: [
-        'Somos una empresa familiar que atiende a la comunidad del Zulia desde 2005. Trabajamos en Maracaibo y Ciudad Ojeda, donde hemos visto pasar miles de vehículos y, sobre todo, hemos construido la confianza de miles de familias zulianas.',
-        'Empezamos con una idea sencilla: comprar y vender como nos gustaría que nos atendieran, con un proceso claro, opciones atractivas y papeles 100% originales. Esa forma de trabajar sigue guiándonos. Hoy reunimos más de 20 años de experiencia, trato honesto y orientación práctica para que tomes una decisión bien informada.',
-      ],
-    },
-    catalog: {
-      intro: {
-        eyebrow: 'Vehículos disponibles',
-        title: 'Revisa el inventario con calma',
-        lead: 'Conoce nuestra selección de vehículos nuevos y usados. Los precios mostrados corresponden a la actualización de septiembre.',
-      },
-      emptyMessage: 'En este momento no hay vehículos publicados. Escríbenos y te contamos qué está por llegar.',
-      note: '¿Quieres vender o dejar tu vehículo en consignación?',
-      noteLinkLabel: 'Conoce el proceso',
-      noteLinkHref: '#faq',
-      vehiclePrimaryButton: 'Consultar vehículo',
-      vehicleSecondaryButton: 'Agendar visita',
-    },
-    testimonials: {
-      intro: {
-        eyebrow: 'Experiencias de quienes nos eligieron',
-        title: 'La confianza también se cuenta',
-      },
-      featured: {
-        quote:
-          'Excelente atención en este concesionario. Compré mi Super Duty y el trato fue impecable de inicio a fin. Rápidos, claros y muy profesionales. Sin duda, volvería a comprar aquí. Totalmente recomendados.',
-        author: 'Alfredo Gutiérrez',
-        dateLabel: 'Mayo 2026',
-        rating: 5,
-      },
-      supporting: [
-        {
-          _key: 't1',
-          quote: 'Encontré el auto perfecto para mi familia. El equipo fue muy paciente y amable con todas mis dudas.',
-          author: 'Cliente de Autos LA 15',
-          rating: 5,
-        },
-        {
-          _key: 't2',
-          quote: 'Vendí mi usado y me dieron un precio justo. La transacción fue rápida y segura. Gracias por todo.',
-          author: 'Cliente de Autos LA 15',
-          rating: 5,
-        },
-        {
-          _key: 't3',
-          quote: 'Amplia variedad de modelos y con opciones de financiamiento. Logré comprar mi primer auto con facilidades.',
-          author: 'Cliente de Autos LA 15',
-          rating: 5,
-        },
-      ],
-    },
-    faq: {
-      intro: {
-        eyebrow: 'Información para decidir',
-        title: 'Antes de comprar o vender',
-        lead: 'Aquí tienes respuestas claras sobre financiamiento, garantías, visitas y consignación.',
-      },
-      sidebarLink: { label: 'Hablar con el equipo', href: '#contacto' },
-      items: [
-        {
-          _key: 'faq-finance',
-          question: '¿Tienen opciones de financiamiento?',
-          defaultOpen: true,
-          answerParagraphs: [
-            'Sí. Trabajamos con una financiadora externa al concesionario. Esta financiadora exige una cuota inicial del 60% del monto total y hasta 1 año para pagar el 40% restante. Los principales requisitos son los últimos 6 movimientos bancarios de la cuenta desde donde se financiaría el vehículo, 2 referencias bancarias, 1 referencia personal, la hoja de vida del aplicante y el registro mercantil, solo si el cliente lo posee.',
-            'Para financiar, primero debes asegurar el vehículo contra todo riesgo. Nosotros cotizamos la póliza y asistimos en el proceso. También debes instalar un dispositivo GPS durante el tiempo que el vehículo sea financiado, con un costo de $300 al año. Por último, debes asumir el documento de compraventa, con un costo aproximado de $400 que incluye revisión INTT y notaría.',
-          ],
-        },
-        {
-          _key: 'faq-warranty',
-          question: '¿Qué garantía tiene cada vehículo?',
-          answerParagraphs: [
-            'El inventario incluye opciones nuevas, seminuevas y usadas. Los carros nuevos tienen garantía, pero los años y el kilometraje varían según cada opción. Las seminuevas pueden conservar una garantía vigente, así que conviene consultar el caso puntual. Las opciones usadas no cuentan con garantía. Recomendamos venir con un mecánico de confianza y hacer una prueba de manejo antes de decidir.',
-          ],
-        },
-        {
-          _key: 'faq-visit',
-          question: '¿Cómo agendo una visita?',
-          answerParagraphs: [
-            'Puedes reservar una cita por Instagram o WhatsApp para ver los modelos. Estamos abiertos de lunes a viernes de 8:30am a 5pm y sábados de 9am a 1pm.',
-          ],
-        },
-        {
-          _key: 'faq-consign',
-          question: '¿Puedo vender o consignar mi vehículo?',
-          answerParagraphs: [
-            'Sí, manejamos 2 opciones. Puedes traernos tu vehículo y, si nos interesa después de verlo y probarlo, conversamos. Si lo valoramos a un precio justo para ambos, te hacemos una oferta directa. La segunda opción es dejarlo a consignación: lo exhibimos como parte del inventario y cobramos una comisión al venderlo. La comisión varía según el monto del vehículo y se coordina al firmar el contrato.',
-          ],
-        },
-      ],
-    },
-    contact: {
-      title: 'Tu próximo vehículo\nempieza aquí',
-      eyebrow: 'Solicita información',
-      lead: 'Cuéntanos qué estás buscando, visítanos en Maracaibo o Ciudad Ojeda, o escríbenos directamente por WhatsApp.',
-      cards: [
-        {
-          _key: 'c1',
-          number: '01',
-          title: 'Compra o vende',
-          body: 'Revisa opciones nuevas, seminuevas y usadas, o conversemos sobre tu vehículo.',
-          linkLabel: 'Ver vehículos',
-          linkHref: '#catalogo',
-        },
-        {
-          _key: 'c2',
-          number: '02',
-          title: 'Visítanos',
-          body: 'Estamos en Maracaibo y Ciudad Ojeda para atenderte durante nuestro horario de atención.',
-        },
-        {
-          _key: 'c3',
-          number: '03',
-          title: 'Consulta al equipo',
-          body: 'Pregúntanos sobre vehículos, financiamiento, garantías o consignación.',
-        },
-      ],
-      locationHeading: 'Dónde encontrarnos',
-      whatsappCtaLabel: 'Hablar por WhatsApp',
-      instagramHandle: '@autosla15',
+    historyImage: {
+      _type: 'image',
+      asset: { _type: 'reference', _ref: historyAssetId },
+      alt: 'Fachada de Autos La 15 en Maracaibo con vehículos en exhibición',
     },
   });
 };
@@ -515,13 +328,9 @@ const main = async () => {
     editorialAssetIds[editorialAsset.key] = result.assetId;
   }
 
-  await seedSiteSettings({ logoAssetId: editorialAssetIds.logoImage });
-  await seedHomePage({
-    heroAssetId: editorialAssetIds.heroImage,
-    historyAssetId: editorialAssetIds.historyImage,
-  });
+  await seedSiteSettings({ heroAssetId: editorialAssetIds.heroImage, historyAssetId: editorialAssetIds.historyImage });
 
-  console.log(`Seed complete: ${loadedVehicles.length} cars, 1 siteSettings document, 1 homePage document.`);
+  console.log(`Seed complete: ${loadedVehicles.length} cars, 1 siteSettings document.`);
   const totalImages = loadedVehicles.length + loadedEditorialAssets.length;
   console.log(`Images uploaded or reused: ${totalImages} total (${uploadedCount} uploaded, ${totalImages - uploadedCount} reused).`);
 };

@@ -79,82 +79,37 @@ if (stats && statNumbers.length) {
   }
 }
 
-const slideshowTrack = document.querySelector('[data-slideshow-track]');
-const slideshowSlides = [...document.querySelectorAll('[data-slideshow-slide]')];
-const slideshowDots = [...document.querySelectorAll('[data-slideshow-dot]')];
-const slideshowPrev = document.querySelector('[data-slideshow-prev]');
-const slideshowNext = document.querySelector('[data-slideshow-next]');
-const slideshowStatus = document.querySelector('[data-slideshow-status]');
-const slideshowBehavior = reducedMotion ? 'auto' : 'smooth';
-let slideshowIndex = 0;
-const setSlideshowIndex = (index) => {
-  if (!slideshowSlides.length) return;
-  slideshowIndex = Math.max(0, Math.min(index, slideshowSlides.length - 1));
-  slideshowSlides.forEach((slide, slideIndex) => slide.classList.toggle('is-active', slideIndex === slideshowIndex));
-  slideshowDots.forEach((dot, dotIndex) => {
-    const current = dotIndex === slideshowIndex;
-    dot.classList.toggle('is-active', current);
-    dot.setAttribute('aria-selected', String(current));
+const catalogPages = [...document.querySelectorAll('.catalog-page')];
+const indicators = [...document.querySelectorAll('[data-catalog-indicator]')];
+const previousButton = document.querySelector('[data-catalog-prev]');
+const nextButton = document.querySelector('[data-catalog-next]');
+const catalogStatus = document.querySelector('[data-catalog-status]');
+let currentPage = 0;
+const showCatalogPage = (pageIndex) => {
+  if (!catalogPages.length) return;
+  currentPage = Math.max(0, Math.min(pageIndex, catalogPages.length - 1));
+  catalogPages.forEach((page, index) => {
+    const current = index === currentPage;
+    page.hidden = !current;
+    page.setAttribute('aria-hidden', String(!current));
+    if (current) page.querySelectorAll('.reveal').forEach((element) => element.classList.add('is-visible'));
   });
-  if (slideshowPrev) slideshowPrev.disabled = slideshowIndex === 0;
-  if (slideshowNext) slideshowNext.disabled = slideshowIndex === slideshowSlides.length - 1;
-  if (slideshowStatus) slideshowStatus.textContent = `${slideshowIndex + 1} de ${slideshowSlides.length}`;
-};
-const slideScrollLeft = (slide) => {
-  if (!slide || !slideshowTrack) return 0;
-  return slide.offsetLeft - (slideshowTrack.clientWidth - slide.clientWidth) / 2;
-};
-const syncSlideshowIndex = () => {
-  if (!slideshowTrack || !slideshowSlides.length) return;
-  const trackRect = slideshowTrack.getBoundingClientRect();
-  const trackCenter = trackRect.left + trackRect.width / 2;
-  let best = 0;
-  let bestDistance = Number.POSITIVE_INFINITY;
-  slideshowSlides.forEach((slide, index) => {
-    const slideRect = slide.getBoundingClientRect();
-    const slideCenter = slideRect.left + slideRect.width / 2;
-    const distance = Math.abs(slideCenter - trackCenter);
-    if (distance < bestDistance) {
-      bestDistance = distance;
-      best = index;
-    }
+  indicators.forEach((indicator, index) => {
+    const current = index === currentPage;
+    indicator.classList.toggle('is-active', current);
+    if (current) indicator.setAttribute('aria-current', 'page');
+    else indicator.removeAttribute('aria-current');
   });
-  if (best !== slideshowIndex) setSlideshowIndex(best);
+  if (previousButton) previousButton.disabled = currentPage === 0;
+  if (nextButton) nextButton.disabled = currentPage === catalogPages.length - 1;
+  if (catalogStatus) catalogStatus.textContent = `Página ${currentPage + 1} de ${catalogPages.length} · 6 vehículos`;
 };
-const goToSlide = (index) => {
-  const slide = slideshowSlides[index];
-  if (!slide || !slideshowTrack) return;
-  const maxScroll = slideshowTrack.scrollWidth - slideshowTrack.clientWidth;
-  const left = Math.min(maxScroll, Math.max(0, slideScrollLeft(slide)));
-  slideshowTrack.scrollTo({ left, behavior: slideshowBehavior });
-  setSlideshowIndex(index);
-};
-slideshowPrev?.addEventListener('click', () => goToSlide(slideshowIndex - 1));
-slideshowNext?.addEventListener('click', () => goToSlide(slideshowIndex + 1));
-slideshowDots.forEach((dot) => {
-  dot.addEventListener('click', () => goToSlide(Number(dot.getAttribute('data-slideshow-dot'))));
-});
-slideshowTrack?.addEventListener('keydown', (event) => {
-  if (event.key === 'ArrowRight') {
-    event.preventDefault();
-    goToSlide(slideshowIndex + 1);
-  }
-  if (event.key === 'ArrowLeft') {
-    event.preventDefault();
-    goToSlide(slideshowIndex - 1);
-  }
-});
-let slideshowScrollFrame = 0;
-slideshowTrack?.addEventListener(
-  'scroll',
-  () => {
-    if (slideshowScrollFrame) cancelAnimationFrame(slideshowScrollFrame);
-    slideshowScrollFrame = requestAnimationFrame(syncSlideshowIndex);
-  },
-  { passive: true },
+previousButton?.addEventListener('click', () => showCatalogPage(currentPage - 1));
+nextButton?.addEventListener('click', () => showCatalogPage(currentPage + 1));
+indicators.forEach((indicator) =>
+  indicator.addEventListener('click', () => showCatalogPage(Number(indicator.getAttribute('data-catalog-indicator')))),
 );
-window.addEventListener('resize', () => goToSlide(slideshowIndex), { passive: true });
-if (slideshowSlides.length) goToSlide(0);
+showCatalogPage(0);
 
 const faqDetails = [...document.querySelectorAll('.faq-item details')];
 const faqDuration = 220;
