@@ -11,11 +11,25 @@ export const car = defineType({
     defineField({ name: 'price', title: 'Precio', type: 'number', validation: (Rule) => Rule.required().positive() }),
     defineField({ name: 'description', title: 'Descripción', type: 'text', rows: 5 }),
     defineField({
-      name: 'image',
-      title: 'Imagen principal',
-      type: 'image',
-      options: { hotspot: true },
-      fields: [defineField({ name: 'alt', title: 'Texto alternativo', type: 'string', validation: (Rule) => Rule.required() })],
+      name: 'images',
+      title: 'Imágenes',
+      type: 'array',
+      options: { layout: 'grid' },
+      of: [
+        {
+          type: 'image',
+          options: { hotspot: true },
+          fields: [
+            defineField({
+              name: 'alt',
+              title: 'Texto alternativo',
+              type: 'string',
+              validation: (Rule) => Rule.required(),
+            }),
+          ],
+        },
+      ],
+      validation: (Rule) => Rule.required().min(1).error('Agrega al menos 1 imagen del vehículo'),
     }),
     defineField({
       name: 'status',
@@ -34,12 +48,19 @@ export const car = defineType({
       validation: (Rule) => Rule.required(),
     }),
     defineField({ name: 'featured', title: 'Destacado', type: 'boolean', initialValue: false }),
+    defineField({
+      name: 'order',
+      title: 'Orden en presentación',
+      type: 'number',
+      description: 'Número más bajo aparece primero en el carrusel. Si está vacío, el vehículo va al final.',
+      validation: (Rule) => Rule.integer().min(0),
+    }),
     defineField({ name: 'badge', title: 'Insignia', type: 'string', description: 'Texto breve como 0 KM o Único dueño.' }),
     defineField({ name: 'whatsappMessage', title: 'Mensaje de WhatsApp', type: 'text', rows: 3 }),
     defineField({ name: 'model3d', title: 'Modelo 3D', type: 'file', options: { accept: '.glb,.gltf,model/gltf-binary,model/gltf+json' } }),
   ],
   preview: {
-    select: { title: 'title', subtitle: 'year', media: 'image' },
+    select: { title: 'title', subtitle: 'year', media: 'images.0' },
     prepare: ({ title, subtitle, media }) => ({ title, subtitle: subtitle ? String(subtitle) : undefined, media }),
   },
 });

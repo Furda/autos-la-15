@@ -88,6 +88,8 @@ if (!response.ok) {
   const text = await response.text();
   if (response.status === 409 && text.includes('already exists')) {
     console.log(`Webhook "${hookName}" already exists on this project.`);
+    console.log(`If homePage edits should trigger rebuilds, set the filter in Sanity Manage to:\n  ${documentFilter}`);
+    console.log('Or run: node --env-file=.env scripts/sync-cms-webhook-filter.mjs (requires a token that can list/update hooks).');
     process.exit(0);
   }
   console.error(`Sanity webhook create failed (${response.status}): ${text}`);

@@ -118,6 +118,8 @@ export default defineConfig({
       dedupe: ['react', 'react-dom', 'react-dom/client', 'styled-components', 'sanity', '@sanity/ui'],
     },
     optimizeDeps: {
+      // Sanity lazy-loads these for UploadProgress / code blocks; pre-bundle to avoid
+      // "504 Outdated Optimize Dep" when Vite re-optimizes during a dev session.
       include: [
         'sanity',
         'sanity/structure',
@@ -131,6 +133,13 @@ export default defineConfig({
         'styled-components',
         'use-sync-external-store/shim',
         'use-sync-external-store/shim/with-selector',
+        'react-refractor',
+        'refractor/bash',
+        'refractor/javascript',
+        'refractor/json',
+        'refractor/jsx',
+        'refractor/typescript',
+        '@sanity/prism-groq',
       ],
     },
   },

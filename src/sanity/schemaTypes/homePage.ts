@@ -139,6 +139,19 @@ export const homePage = defineType({
           title: 'Tarjetas',
           type: 'array',
           of: [{ type: 'contactCard' }],
+          validation: (Rule) =>
+            Rule.custom((cards) => {
+              if (!Array.isArray(cards)) return true;
+              const hoursCards = cards.filter((card) => card?.showHours);
+              const channelCards = cards.filter((card) => card?.showContactChannels);
+              if (hoursCards.length > 1) {
+                return 'Solo una tarjeta puede mostrar horarios.';
+              }
+              if (channelCards.length > 1) {
+                return 'Solo una tarjeta puede mostrar teléfono, correo e Instagram.';
+              }
+              return true;
+            }),
         }),
         defineField({ name: 'locationHeading', title: 'Título de ubicación', type: 'string' }),
         defineField({ name: 'whatsappCtaLabel', title: 'Texto botón WhatsApp', type: 'string' }),
