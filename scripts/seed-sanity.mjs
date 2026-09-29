@@ -90,6 +90,7 @@ const vehicles = [
       'Pickup 0 km, fuerte y completa de fábrica. Ofrece garantía full, interior amplio y tecnología actual para trabajo o paseo.',
     badge: '0 KM',
     featured: true,
+    order: 1,
   },
   {
     id: 'car-hyundai-grand-i10-2026',
@@ -111,6 +112,7 @@ const vehicles = [
       'Compacto por fuera y cómodo por dentro, con consumo eficiente. Es blanco, está 0 km y cuenta con garantía de fábrica.',
     badge: '0 KM',
     featured: true,
+    order: 2,
   },
   {
     id: 'car-hyundai-santa-fe-2017',
@@ -121,6 +123,7 @@ const vehicles = [
     description:
       'De único dueño, con 44 mil km, color blanco, motor 3.3 L, seis cilindros y tracción 4x4. Está como nueva por dentro y por fuera, con equipamiento completo.',
     featured: true,
+    order: 3,
   },
   {
     id: 'car-toyota-hiace-2009',
@@ -141,6 +144,7 @@ const vehicles = [
     description:
       'SUV premium blanca, con motor 2.5 L, tres filas para siete pasajeros y 32 mil km. Es de único dueño y combina comodidad, seguridad y tecnología actual.',
     featured: true,
+    order: 4,
   },
 ];
 
@@ -246,11 +250,14 @@ const seedCar = async (vehicle, assetId) => {
     year: vehicle.year,
     price: vehicle.price,
     description: vehicle.description,
-    image: {
-      _type: 'image',
-      asset: { _type: 'reference', _ref: assetId },
-      alt: `${vehicle.name}, vehículo disponible en Autos La 15`,
-    },
+    images: [
+      {
+        _key: 'primary',
+        _type: 'image',
+        asset: { _type: 'reference', _ref: assetId },
+        alt: `${vehicle.name}, vehículo disponible en Autos La 15`,
+      },
+    ],
     status: 'available',
     featured: vehicle.featured,
     whatsappMessage: `Hola Autos La 15, me interesa el ${vehicle.name} (${formatPrice(vehicle.price)}). ¿Me comparten más información?`,
@@ -258,6 +265,10 @@ const seedCar = async (vehicle, assetId) => {
 
   if (vehicle.badge) {
     document.badge = vehicle.badge;
+  }
+
+  if (typeof vehicle.order === 'number') {
+    document.order = vehicle.order;
   }
 
   await client.createOrReplace(document);
@@ -482,12 +493,14 @@ const seedHomePage = async ({ heroAssetId, historyAssetId }) => {
           number: '02',
           title: 'Visítanos',
           body: 'Estamos en Maracaibo y Ciudad Ojeda para atenderte durante nuestro horario de atención.',
+          showHours: true,
         },
         {
           _key: 'c3',
           number: '03',
           title: 'Consulta al equipo',
           body: 'Pregúntanos sobre vehículos, financiamiento, garantías o consignación.',
+          showContactChannels: true,
         },
       ],
       locationHeading: 'Dónde encontrarnos',

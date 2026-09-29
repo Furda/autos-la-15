@@ -10,18 +10,29 @@ type SectionIntro = { eyebrow?: string; title?: string; lead?: string };
 type StatItem = { value?: number; suffix?: string; label?: string };
 type Testimonial = { quote?: string; author?: string; dateLabel?: string; rating?: number };
 type FaqItem = { question?: string; answerParagraphs?: string[]; defaultOpen?: boolean };
-type ContactCard = { number?: string; title?: string; body?: string; linkLabel?: string; linkHref?: string };
+type ContactCard = {
+  number?: string;
+  title?: string;
+  body?: string;
+  linkLabel?: string;
+  linkHref?: string;
+  showHours?: boolean;
+  showContactChannels?: boolean;
+};
 
 type Car = {
   _id: string;
+  _createdAt?: string;
   name: string;
   title?: string;
   year: number;
   price: number;
   description?: string;
   image?: SanityImage;
+  images?: SanityImage[];
   status: 'available' | 'reserved';
   featured?: boolean;
+  order?: number;
   badge?: string;
   whatsappMessage?: string;
 };
@@ -96,9 +107,11 @@ const [siteSettings, homePage, cars] = await Promise.all([
     contact
   }`),
   sanityClient.fetch<Car[]>(`*[_type == "car" && status in ["available", "reserved"]]
-    | order(featured desc, _createdAt asc, _id asc){
-      _id, name, title, year, price, description, image{..., ${imageFields}},
-      status, featured, badge, whatsappMessage
+    | order(coalesce(order, 9999) asc, featured desc, _createdAt asc, _id asc){
+      _id, _createdAt, name, title, year, price, description,
+      image{..., ${imageFields}},
+      images[]{..., ${imageFields}},
+      status, featured, order, badge, whatsappMessage
     }`),
 ]);
 
@@ -146,7 +159,19 @@ const historyAlt = home.history?.image?.alt ?? 'Fachada de Autos La 15';
 const cardImageUrl = (image: SanityImage | undefined) =>
   images.url(image, { width: 1800, height: 1100, fit: 'crop' });
 
-const conditionLabel = (car: Car) => (car.status === 'reserved' ? 'Reservado' : car.badge || 'Disponible');
+const vehicleImages = (car: Car): SanityImage[] => {
+  if (car.images?.length) return car.images;
+  return car.image ? [car.image] : [];
+};
+
+const isZeroKm = (car: Car) => /0\s*km/i.test(car.badge ?? '');
+const catalogFilterTags = (car: Car) => {
+  const tags: string[] = [];
+  if (car.status === 'reserved') tags.push('reserved');
+  if (isZeroKm(car)) tags.push('zero-km');
+  if (car.status === 'available' && !isZeroKm(car)) tags.push('used');
+  return tags.join(' ');
+};
 const formatPrice = (price: number) =>
   new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(price);
 
@@ -216,7 +241,7 @@ const structuredData = {
   <body>
     <a class="skip-link" href="#main-content">Saltar al contenido</a>
 
-    <header class="site-header" id="top">
+    <header class="site-header over-hero" id="top">
       <div class="container header-inner">
         <a href="#top" class="brand" aria-label={`${brandName}, inicio`}>
           <img src={logoSrc} alt={logoAlt} class="brand-logo" width="40" height="40" />
@@ -311,18 +336,119 @@ const structuredData = {
           )}
         </div>
         {cars.length > 0 && (
-          <div class="slideshow">
+          <div class="slideshow" data-slideshow>
+            <div class="container catalog-filters-wrap">
+              <div class="catalog-filters" role="toolbar" aria-label="Filtrar vehículos">
+                <button class="catalog-filter is-active" type="button" data-catalog-filter="all" aria-pressed="true">Todos</button>
+                <button class="catalog-filter" type="button" data-catalog-filter="zero-km" aria-pressed="false">0 KM</button>
+                <button class="catalog-filter" type="button" data-catalog-filter="used" aria-pressed="false">Usados</button>
+                <button class="catalog-filter" type="button" data-catalog-filter="reserved" aria-pressed="false">Reservados</button>
+              </div>
+              <div class="catalog-filters-aside">
+                <div class="catalog-sort" data-catalog-sort data-value="default">
+                  <button
+                    class="catalog-sort-trigger"
+                    type="button"
+                    data-catalog-sort-trigger
+                    aria-haspopup="listbox"
+                    aria-expanded="false"
+                    aria-controls="catalog-sort-list"
+                  >
+                    <span data-catalog-sort-current>Ordenar</span>
+                    <svg class="catalog-sort-chevron" width="12" height="12" viewBox="0 0 12 12" aria-hidden="true">
+                      <path fill="currentColor" d="M3 4.25 6 7.25 9 4.25" />
+                    </svg>
+                  </button>
+                  <div class="catalog-sort-popover" data-catalog-sort-popover hidden>
+                    <ul class="catalog-sort-list" id="catalog-sort-list" role="listbox" aria-label="Ordenar vehículos por año">
+                      <li role="presentation">
+                        <button class="catalog-sort-option is-selected" type="button" role="option" data-catalog-sort-value="default" aria-selected="true">
+                          Ordenar
+                          <span class="catalog-sort-check" aria-hidden="true">✓</span>
+                        </button>
+                      </li>
+                      <li role="presentation">
+                        <button class="catalog-sort-option" type="button" role="option" data-catalog-sort-value="newest" aria-selected="false">
+                          Más nuevos
+                          <span class="catalog-sort-check" aria-hidden="true">✓</span>
+                        </button>
+                      </li>
+                      <li role="presentation">
+                        <button class="catalog-sort-option" type="button" role="option" data-catalog-sort-value="oldest" aria-selected="false">
+                          Más antiguos
+                          <span class="catalog-sort-check" aria-hidden="true">✓</span>
+                        </button>
+                      </li>
+                    </ul>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="container">
+              <div class="catalog-filter-empty" data-catalog-filter-empty hidden>
+                <p class="catalog-filter-empty-text" data-catalog-filter-empty-text>
+                  No hay vehículos que coincidan con este filtro.
+                </p>
+                <button class="btn btn-primary catalog-filter-empty-reset" type="button" data-catalog-filter-reset>
+                  Ver todos los vehículos
+                </button>
+              </div>
+            </div>
             <div class="slideshow-viewport">
               <button class="slideshow-arrow slideshow-arrow-prev" type="button" data-slideshow-prev aria-label="Ver vehículo anterior">
                 <span aria-hidden="true">‹</span>
               </button>
               <div class="slideshow-track" data-slideshow-track tabindex="0" aria-label="Presentación de vehículos">
-                {cars.map((car, index) => (
-                  <article class:list={['vehicle-card', index === 0 && 'is-active']} id={`vehiculo-${car._id}`} data-slideshow-slide={index} aria-roledescription="diapositiva" aria-label={`${index + 1} de ${cars.length}: ${car.name}`}>
-                    <img class="vehicle-card-image" src={cardImageUrl(car.image)} alt={car.image?.alt ?? car.name} width="1800" height="1100" loading={index === 0 ? 'eager' : 'lazy'} />
+                {cars.map((car, index) => {
+                  const photos = vehicleImages(car);
+                  const hasGallery = photos.length > 1;
+                  return (
+                  <article class:list={['vehicle-card', index === 0 && 'is-active']} id={`vehiculo-${car._id}`} data-slideshow-slide data-car-id={car._id} data-catalog-filter={catalogFilterTags(car)} data-sort-index={index} data-sort-year={car.year} data-sort-created={car._createdAt ?? ''} aria-roledescription="diapositiva" aria-label={`${index + 1} de ${cars.length}: ${car.name}`}>
+                    <div class="vehicle-card-gallery" data-vehicle-gallery={hasGallery ? '' : undefined}>
+                      {photos.map((photo, photoIndex) => (
+                        <img
+                          class:list={['vehicle-card-image', photoIndex === 0 && 'is-active']}
+                          data-vehicle-gallery-image={photoIndex}
+                          src={cardImageUrl(photo)}
+                          alt={photo.alt ?? car.name}
+                          width="1800"
+                          height="1100"
+                          loading={index === 0 && photoIndex === 0 ? 'eager' : 'lazy'}
+                        />
+                      ))}
+                      {hasGallery && (
+                        <>
+                          <button class="vehicle-gallery-arrow vehicle-gallery-arrow-prev" type="button" data-vehicle-gallery-prev aria-label={`Foto anterior de ${car.name}`}>
+                            <span aria-hidden="true">‹</span>
+                          </button>
+                          <button class="vehicle-gallery-arrow vehicle-gallery-arrow-next" type="button" data-vehicle-gallery-next aria-label={`Foto siguiente de ${car.name}`}>
+                            <span aria-hidden="true">›</span>
+                          </button>
+                          <div class="vehicle-gallery-meta" aria-live="polite">
+                            <div class="vehicle-gallery-dots" role="tablist" aria-label={`Fotos de ${car.name}`}>
+                              {photos.map((photo, photoIndex) => (
+                                <button
+                                  class:list={['vehicle-gallery-dot', photoIndex === 0 && 'is-active']}
+                                  type="button"
+                                  role="tab"
+                                  data-vehicle-gallery-dot={photoIndex}
+                                  aria-label={`Foto ${photoIndex + 1}${photo.alt ? `: ${photo.alt}` : ''}`}
+                                  aria-selected={photoIndex === 0 ? 'true' : 'false'}
+                                ></button>
+                              ))}
+                            </div>
+                            <p class="vehicle-gallery-status" data-vehicle-gallery-status>1 de {photos.length}</p>
+                          </div>
+                        </>
+                      )}
+                    </div>
+                    {hasGallery && (
+                      <div class="vehicle-gallery-progress" aria-hidden="true">
+                        <span class="vehicle-gallery-progress-fill" data-vehicle-gallery-progress-fill></span>
+                      </div>
+                    )}
                     <div class="vehicle-card-shade" aria-hidden="true"></div>
                     <div class="vehicle-card-copy">
-                      <p class="vehicle-kicker">{conditionLabel(car)} · {car.year}</p>
                       <div class="vehicle-card-footer">
                         <h3 id={`vehiculo-titulo-${car._id}`}>{car.name}</h3>
                         <p class="vehicle-price">{formatPrice(car.price)}</p>
@@ -335,7 +461,8 @@ const structuredData = {
                       </div>
                     </div>
                   </article>
-                ))}
+                  );
+                })}
               </div>
               <button class="slideshow-arrow slideshow-arrow-next" type="button" data-slideshow-next aria-label="Ver vehículo siguiente">
                 <span aria-hidden="true">›</span>
@@ -344,7 +471,7 @@ const structuredData = {
             <div class="slideshow-meta">
               <div class="slideshow-dots" role="tablist" aria-label="Vehículos de la presentación">
                 {cars.map((car, index) => (
-                  <button class:list={['slideshow-dot', index === 0 && 'is-active']} type="button" role="tab" data-slideshow-dot={index} aria-label={car.name} aria-selected={index === 0 ? 'true' : 'false'}></button>
+                  <button class:list={['slideshow-dot', index === 0 && 'is-active']} type="button" role="tab" data-slideshow-dot data-car-id={car._id} data-catalog-filter={catalogFilterTags(car)} data-sort-index={index} data-sort-year={car.year} data-sort-created={car._createdAt ?? ''} aria-label={car.name} aria-selected={index === 0 ? 'true' : 'false'}></button>
                 ))}
               </div>
               <p class="slideshow-status" data-slideshow-status aria-live="polite">1 de {cars.length}</p>
@@ -464,16 +591,21 @@ const structuredData = {
                       {card.linkLabel} <span aria-hidden="true">↗</span>
                     </a>
                   )}
-                  {card.number === '02' && (
+                  {card.showHours && (
                     <div class="contact-card-details">
-                      {contact.phone && <a href={`tel:${contact.phone}`}>{contact.phone}</a>}
                       {hours.map((hour) => (
                         <span>{hour.label}: {hour.opening} - {hour.closing}</span>
                       ))}
                     </div>
                   )}
-                  {card.number === '03' && (
+                  {card.showContactChannels && (
                     <div class="contact-card-details">
+                      {contact.phone && (
+                        <a class="contact-detail-link" href={`tel:${contact.phone}`} aria-label={`Llamar al ${contact.phone}`}>
+                          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path></svg>
+                          <span>{contact.phone}</span>
+                        </a>
+                      )}
                       {contact.email && (
                         <a class="contact-detail-link" href={`mailto:${contact.email}`} aria-label={`Enviar correo a ${contact.email}`}>
                           <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2"></rect><path d="m3 7 9 6 9-6"></path></svg>
