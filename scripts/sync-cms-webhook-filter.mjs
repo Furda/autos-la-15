@@ -5,7 +5,7 @@
  */
 const projectId = process.env.SANITY_PROJECT_ID;
 const token = process.env.SANITY_TOKEN;
-const hookName = 'Vercel production rebuild (CMS publish)';
+const hookName = 'Production rebuild (CMS publish)';
 const documentFilter = '_type in ["car", "siteSettings", "homePage"]';
 
 const required = ['SANITY_PROJECT_ID', 'SANITY_TOKEN'];

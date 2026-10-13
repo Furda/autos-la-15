@@ -2,7 +2,7 @@
 
 Production site: static **Astro** app with embedded **Sanity Studio** at `/studio`. The `provisional/` directory is the legacy fallback and is not part of this build.
 
-- **Live:** https://autos-la-15.vercel.app  
+- **Live:** https://autos-la-15.pages.dev  
 - **Handoff (client + ops):** [odd/handoff/autosla15-real-site.md](odd/handoff/autosla15-real-site.md)  
 - **Build progress / evidence:** [odd/tasks/autosla15-real-site.md](odd/tasks/autosla15-real-site.md)
 
@@ -10,7 +10,7 @@ Production site: static **Astro** app with embedded **Sanity Studio** at `/studi
 
 | Branch | Role |
 |--------|------|
-| **`main`** | Production. Vercel deploys from `main`. |
+| **`main`** | Production. Cloudflare Pages deploys from `main`. |
 | **`feat/*`** (or other) | Development. Open a **PR into `main`**; merge after review and checks. |
 
 Do not commit `.env` or tokens.
@@ -24,6 +24,8 @@ Do not commit `.env` or tokens.
 
 For a production-like local build, set `PUBLIC_SITE_URL` (see `.env.example`).
 
+Node **22+** for build (see `.node-version`; Cloudflare Pages uses `NODE_VERSION=22`).
+
 ## Scripts
 
 | Command | Purpose |
@@ -35,24 +37,24 @@ For a production-like local build, set `PUBLIC_SITE_URL` (see `.env.example`).
 
 ## Sanity Studio on production (one-time per URL)
 
-Embedded Studio at `/studio` must be **registered** with the Sanity project and allowed in **CORS** (origin `https://autos-la-15.vercel.app`, credentials on). From the repo (logged-in Sanity CLI):
+Embedded Studio at `/studio` must be **registered** with the Sanity project and allowed in **CORS** (origin with credentials). From the repo (logged-in Sanity CLI):
 
 ```bash
-npx sanity cors add https://autos-la-15.vercel.app --credentials -p 7mz74qpp -y
-npx sanity@latest deploy --external --url https://autos-la-15.vercel.app/studio -y
+npx sanity cors add https://autos-la-15.pages.dev --credentials -p 7mz74qpp -y
+npx sanity@latest deploy --external --url https://autos-la-15.pages.dev/studio -y
 ```
 
 Repeat with the new origin/URL when the public domain changes. See `sanity.cli.ts` (`basePath: '/studio'`).
 
 ## CMS redeploy wiring
 
-Published edits to `car` and `siteSettings` trigger a Vercel rebuild via Sanity webhook → deploy hook. Ops details and IDs are in the handoff doc. To (re)create the Sanity webhook locally:
+Published edits to `car`, `siteSettings`, and `homePage` (Página de inicio) trigger a Cloudflare Pages rebuild via Sanity webhook → Pages deploy hook. Ops details are in the handoff doc. To create or update the Sanity webhook locally:
 
 ```bash
-# VERCEL_DEPLOY_HOOK_URL in .env only — never commit
+# PAGES_DEPLOY_HOOK_URL in .env only — never commit
 node --env-file=.env scripts/setup-cms-redeploy-webhook.mjs
 ```
 
-## Vercel
+## Cloudflare Pages
 
-Project name: **`autos-la-15`**. Root `vercel.json` sets `npm run build` and `dist/`. Link CLI: `npx vercel link --project autos-la-15`.
+Project name: **`autos-la-15`**. Build: `npm run build`, output `dist/`, production branch `main`. Configure env vars in the Pages dashboard (see handoff doc).

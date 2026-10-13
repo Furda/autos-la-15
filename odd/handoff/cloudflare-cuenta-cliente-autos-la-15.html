@@ -1,0 +1,436 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Guía Cloudflare — Autos La 15</title>
+  <style>
+    :root {
+      --bg-color: #121212;
+      --card-bg: #1a1a1a;
+      --card-border: #2a2a2a;
+      --accent-green: #ccff00;
+      --text-main: #f0f0f0;
+      --text-muted: #a0a0a0;
+      --line-color: #262626;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    @page {
+      size: A4;
+      margin: 0;
+    }
+
+    html {
+      background: var(--bg-color);
+      -webkit-print-color-adjust: exact;
+      print-color-adjust: exact;
+    }
+
+    body {
+      background: var(--bg-color);
+      color: var(--text-main);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      font-size: 11pt;
+      line-height: 1.5;
+      -webkit-print-color-adjust: exact;
+      print-color-adjust: exact;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 820px;
+      margin: 0 auto;
+      padding: 32px 48px 40px;
+      background: var(--bg-color);
+    }
+
+    .subtitle-top {
+      color: var(--accent-green);
+      font-size: 0.72rem;
+      text-transform: uppercase;
+      letter-spacing: 1.2px;
+      font-weight: 600;
+      margin-bottom: 10px;
+    }
+
+    h1 {
+      font-size: 1.85rem;
+      font-weight: 700;
+      margin-bottom: 10px;
+      color: #ffffff;
+      line-height: 1.15;
+    }
+
+    .intro-text {
+      color: var(--text-muted);
+      font-size: 0.95rem;
+      margin-bottom: 22px;
+      padding-bottom: 18px;
+      border-bottom: 1px solid var(--line-color);
+    }
+
+    .intro-text strong {
+      color: var(--text-main);
+    }
+
+    h2 {
+      font-size: 1.15rem;
+      font-weight: 700;
+      margin: 28px 0 10px;
+      color: #ffffff;
+      page-break-after: avoid;
+    }
+
+    h3 {
+      font-size: 0.98rem;
+      font-weight: 700;
+      margin: 18px 0 8px;
+      color: #ffffff;
+      page-break-after: avoid;
+    }
+
+    p {
+      margin: 0 0 10px;
+      color: var(--text-main);
+      font-size: 0.92rem;
+    }
+
+    strong {
+      font-weight: 600;
+      color: var(--text-main);
+    }
+
+    code {
+      font-family: ui-monospace, Consolas, monospace;
+      font-size: 0.88em;
+      color: var(--accent-green);
+    }
+
+    ul, ol {
+      margin: 0 0 12px;
+      padding-left: 22px;
+      font-size: 0.92rem;
+    }
+
+    li {
+      margin-bottom: 6px;
+      color: var(--text-main);
+    }
+
+    li::marker {
+      color: var(--accent-green);
+    }
+
+    a {
+      color: var(--accent-green);
+      word-break: break-all;
+    }
+
+    .callout {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-left: 4px solid var(--accent-green);
+      border-radius: 8px;
+      padding: 18px 20px;
+      margin: 16px 0 22px;
+      page-break-inside: avoid;
+    }
+
+    .callout-label {
+      display: block;
+      color: var(--accent-green);
+      font-size: 0.78rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.6px;
+      margin-bottom: 8px;
+    }
+
+    .callout p {
+      margin: 0;
+      color: var(--text-muted);
+      font-size: 0.9rem;
+    }
+
+    .callout p strong {
+      color: var(--text-main);
+    }
+
+    .meta-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 8px;
+      padding: 16px 18px;
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 8px;
+      margin: 16px 0 22px;
+      page-break-inside: avoid;
+    }
+
+    .meta-item span {
+      color: var(--text-muted);
+      font-size: 0.82rem;
+      display: block;
+      margin-bottom: 4px;
+    }
+
+    .meta-item strong {
+      color: var(--accent-green);
+      font-size: 1rem;
+      font-weight: 600;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 10px 0 18px;
+      font-size: 0.88rem;
+      page-break-inside: avoid;
+      border-top: 1px solid var(--line-color);
+    }
+
+    th, td {
+      padding: 11px 0;
+      text-align: left;
+      vertical-align: top;
+      border: none;
+      border-bottom: 1px solid var(--line-color);
+    }
+
+    th {
+      color: var(--accent-green);
+      font-weight: 600;
+      background: transparent;
+    }
+
+    td {
+      color: var(--text-muted);
+    }
+
+    td strong {
+      color: var(--text-main);
+    }
+
+    .checklist {
+      list-style: none;
+      padding: 0;
+      margin: 10px 0 16px;
+      border-top: 1px solid var(--line-color);
+    }
+
+    .checklist li {
+      padding: 11px 0 11px 26px;
+      position: relative;
+      border-bottom: 1px solid var(--line-color);
+      color: var(--text-main);
+      font-size: 0.9rem;
+    }
+
+    .checklist li::before {
+      content: "☐";
+      position: absolute;
+      left: 0;
+      color: var(--accent-green);
+      font-size: 12pt;
+    }
+
+    .note {
+      font-size: 0.82rem;
+      color: var(--text-muted);
+    }
+
+    .section-block {
+      page-break-inside: avoid;
+    }
+
+    .page-break {
+      page-break-before: always;
+    }
+
+    @media print {
+      html, body {
+        background: var(--bg-color);
+      }
+      .container {
+        max-width: 820px;
+        margin: 0 auto;
+        padding: 28px 44px 36px;
+      }
+      a {
+        color: var(--accent-green);
+        text-decoration: underline;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+
+    <div class="subtitle-top">Autos La 15 · Migración de hosting</div>
+    <h1>Guía para crear la cuenta Cloudflare</h1>
+    <p class="intro-text"><strong>Autos La 15</strong> — pasos únicos para preparar el hosting del sitio web (15–25 minutos). Su desarrollador configura el resto después de invitarlo.</p>
+
+    <div class="callout">
+      <span class="callout-label">Para el cliente</span>
+      <p>Esta guía prepara la cuenta donde vivirá el sitio web definitivo. <strong>No necesita</strong> usar GitHub, programar ni entrar al panel donde edita los vehículos (Sanity). Su desarrollador configurará el resto después de que usted lo invite.</p>
+    </div>
+
+    <h2>1. Qué es Cloudflare y por qué lo necesitamos</h2>
+    <p>Cloudflare <strong>Pages</strong> es el servicio donde se publicará el sitio de Autos La 15 en internet. Para este proyecto el plan <strong>gratuito</strong> es suficiente.</p>
+    <p><strong>Cloudflare</strong> = dónde se muestra la página web al público.<br />
+    <strong>Sanity (panel / Studio)</strong> = donde usted edita carros, precios y textos (igual que hasta ahora).</p>
+    <p>Usted casi <strong>nunca</strong> tendrá que entrar a Cloudflare después de seguir esta guía.</p>
+
+    <h2>2. Antes de empezar — tenga a mano</h2>
+    <table>
+      <thead>
+        <tr><th>Qué necesita</th><th>Para qué</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Correo electrónico del negocio (no temporal)</td>
+          <td>Será su usuario de Cloudflare a largo plazo</td>
+        </tr>
+        <tr>
+          <td>Contraseña segura (guárdela en lugar seguro)</td>
+          <td>Acceso a la cuenta</td>
+        </tr>
+        <tr>
+          <td>Teléfono móvil</td>
+          <td>Verificación de seguridad (recomendado)</td>
+        </tr>
+        <tr>
+          <td>Tarjeta internacional (Visa o Mastercard)</td>
+          <td><strong>Solo si</strong> van a comprar el dominio .com en Cloudflare pronto (~10–15 USD/año). Si el dominio se compra en otro sitio, puede omitir el pago por ahora.</td>
+        </tr>
+        <tr>
+          <td>Correo del desarrollador (ver abajo)</td>
+          <td>Para invitarlo sin compartir su contraseña</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="meta-grid">
+      <div class="meta-item">
+        <span>Correo del desarrollador para la invitación (Administrator)</span>
+        <strong>furdac14@gmail.com</strong>
+      </div>
+    </div>
+
+    <h2>3. Paso a paso — crear la cuenta</h2>
+    <h3>Paso 1 — Registrarse</h3>
+    <ol>
+      <li>Abra el navegador (Chrome, Edge o Safari).</li>
+      <li>Entre a: <a href="https://dash.cloudflare.com/sign-up" target="_blank" rel="noopener noreferrer">https://dash.cloudflare.com/sign-up</a></li>
+      <li>Escriba su <strong>correo</strong> y una <strong>contraseña</strong>.</li>
+      <li>Pulse <strong>Sign up</strong> (Registrarse).</li>
+      <li>Revise su bandeja de entrada y la carpeta <strong>Spam / Correo no deseado</strong>.</li>
+      <li>Abra el correo de Cloudflare y pulse el enlace <strong>Verify email</strong> (Verificar correo).</li>
+      <li>Inicie sesión en: <a href="https://dash.cloudflare.com/login" target="_blank" rel="noopener noreferrer">https://dash.cloudflare.com/login</a></li>
+    </ol>
+    <p><strong>Listo cuando:</strong> ve el panel principal de Cloudflare (puede aparecer “Add a site” o un menú lateral).</p>
+
+    <h3>Paso 2 — No agregue un sitio todavía</h3>
+    <p>Cloudflare puede pedirle <strong>“Add a site”</strong> o que escriba un dominio.</p>
+    <ul>
+      <li><strong>No escriba el dominio todavía</strong> si su desarrollador le pidió esperar.</li>
+      <li>Puede pulsar <strong>Cancel</strong> o ir al <strong>Home</strong> del panel.</li>
+      <li>Si ya escribió algo por error, avise al desarrollador; no es grave.</li>
+    </ul>
+
+    <div class="page-break"></div>
+
+    <h3>Paso 3 — Activar verificación en dos pasos (muy recomendado)</h3>
+    <p>Protege la cuenta si alguien descubre la contraseña.</p>
+    <ol>
+      <li>Arriba a la derecha, pulse su <strong>icono de perfil</strong> o <strong>My Profile</strong>.</li>
+      <li>Busque <strong>Authentication</strong> o <strong>Two-Factor Authentication (2FA)</strong>.</li>
+      <li>Siga los pasos con su teléfono (aplicación o SMS, según ofrezca Cloudflare).</li>
+      <li><strong>Guarde los códigos de respaldo</strong> en un lugar seguro (papel en archivo del negocio o foto en lugar privado).</li>
+    </ol>
+    <p><strong>Listo cuando:</strong> indica que 2FA está <strong>Enabled</strong> (activado).</p>
+
+    <h3>Paso 4 — Invitar al desarrollador (paso más importante)</h3>
+    <p>Así el desarrollador configura el hosting <strong>sin</strong> que usted comparta su contraseña.</p>
+    <ol>
+      <li>En el panel, vaya a <strong>Manage Account</strong> → <strong>Members</strong> (Miembros).</li>
+      <li>Enlace directo (después de iniciar sesión):<br />
+        <a href="https://dash.cloudflare.com/?to=/:account/members" target="_blank" rel="noopener noreferrer">https://dash.cloudflare.com/?to=/:account/members</a></li>
+      <li>Pulse <strong>Invite</strong> (Invitar).</li>
+      <li>Complete:
+        <ul>
+          <li><strong>Email:</strong> correo del desarrollador (arriba en esta guía)</li>
+          <li><strong>Role (Rol):</strong> elija <strong>Administrator</strong> (Administrador)</li>
+        </ul>
+      </li>
+      <li><strong>No elija</strong> “Read only” (solo lectura) ni roles solo de facturación.</li>
+      <li>Envíe la invitación.</li>
+    </ol>
+    <p><strong>Listo cuando:</strong> en la lista aparece el desarrollador como <strong>Invited</strong> o <strong>Active</strong> (después de que él acepte por correo).</p>
+
+    <div class="callout">
+      <span class="callout-label">Mensaje sugerido por WhatsApp</span>
+      <p>“Ya creé la cuenta Cloudflare, activé verificación en dos pasos e invité tu correo como Administrator. Revisa tu email para aceptar la invitación.”</p>
+    </div>
+
+    <h3>Paso 5 — Método de pago (solo si comprarán el dominio .com en Cloudflare)</h3>
+    <ol>
+      <li><strong>Manage Account</strong> → <strong>Billing</strong> → <strong>Payment methods</strong>.</li>
+      <li>Agregue su tarjeta internacional y confirme que quedó guardada.</li>
+    </ol>
+    <p class="note">Si el dominio se compra en otro proveedor o más adelante, puede <strong>saltar</strong> este paso.</p>
+
+    <h2>4. Lo que NO debe hacer</h2>
+    <table>
+      <thead>
+        <tr><th>Evite</th><th>Motivo</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>Borrar la invitación al desarrollador</td><td>No podrá terminar la configuración</td></tr>
+        <tr><td>Cambiar el rol del desarrollador a “solo lectura”</td><td>No podrá publicar el sitio</td></tr>
+        <tr><td>Compartir su contraseña de Cloudflare</td><td>La invitación es la forma correcta</td></tr>
+        <tr><td>Conectar GitHub u otras aplicaciones usted mismo</td><td>Lo hace el desarrollador</td></tr>
+        <tr><td>Eliminar la cuenta Cloudflare</td><td>Se perdería hosting y dominio configurado</td></tr>
+        <tr><td>Contratar plan de pago Pro/Business</td><td>El plan gratuito basta para este sitio</td></tr>
+      </tbody>
+    </table>
+
+    <h2>5. Lista de comprobación — ¿terminó su parte?</h2>
+    <ul class="checklist">
+      <li>Cuenta creada y correo verificado</li>
+      <li>Verificación en dos pasos activada (recomendado)</li>
+      <li>Desarrollador invitado como <strong>Administrator</strong></li>
+      <li>(Opcional) Tarjeta agregada si comprarán el dominio en Cloudflare</li>
+      <li>Avisó al desarrollador por WhatsApp o correo</li>
+    </ul>
+    <p><strong>Después de esto no necesita hacer nada más</strong> hasta que le avisen la nueva dirección del panel de edición (Studio) y, si aplica, el dominio final del sitio.</p>
+
+    <div class="page-break"></div>
+
+    <h2>6. Preguntas frecuentes</h2>
+    <h3>¿Cloudflare cuesta dinero?</h3>
+    <p>El hosting del sitio (Pages) en plan gratuito <strong>no tiene costo mensual</strong> para un catálogo como el suyo. El <strong>dominio</strong> (.com) sí se paga por año (aprox. 10–15 USD).</p>
+
+    <h3>¿Es lo mismo que el panel donde edito los carros?</h3>
+    <p><strong>No.</strong> Sanity es donde edita vehículos y textos. Cloudflare es solo dónde “vive” la página en internet.</p>
+
+    <h3>¿Perderé el acceso al panel de edición?</h3>
+    <p><strong>No.</strong> Solo cambiará la <strong>dirección web</strong> para abrir el panel (por ejemplo <code>https://www.sudominio.com/studio</code>). El inicio de sesión de Sanity es el mismo.</p>
+
+    <h3>¿Qué hago si no entiendo una pantalla?</h3>
+    <p>Tome una <strong>captura de pantalla</strong> y envíela al desarrollador. <strong>No pulse “Delete” ni “Remove member”.</strong></p>
+
+    <h2>7. Soporte</h2>
+    <p>Para dudas durante estos pasos, contacte a su desarrollador del proyecto Autos La 15.</p>
+    <p class="note">Documento preparado para la migración de hosting a Cloudflare Pages. Versión: septiembre 2026.</p>
+
+  </div>
+</body>
+</html>

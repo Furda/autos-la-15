@@ -6,12 +6,13 @@ Documento de handoff para el sitio en producción. El sitio provisional sigue di
 
 | Qué | URL |
 |-----|-----|
-| **Sitio en producción (actual)** | https://autos-la-15.vercel.app |
-| **Panel de contenido (Studio)** | https://autos-la-15.vercel.app/studio |
+| **Sitio en producción (actual)** | https://autos-la-15.pages.dev |
+| **Panel de contenido (Studio)** | https://autos-la-15.pages.dev/studio |
+| **Sitio anterior (Vercel, legacy)** | https://autos-la-15.vercel.app |
 | **Sitio provisional (respaldo)** | https://provisional-khaki.vercel.app |
 | **Repositorio** | https://github.com/Furda/autos-la-15 |
 
-Cuando exista dominio propio (ej. `www.autosla15.com`), se configurará en Vercel y se actualizará `PUBLIC_SITE_URL` en el proyecto.
+Cuando exista dominio propio (ej. `www.autosla15.com`), se configurará en Cloudflare Pages y se actualizará `PUBLIC_SITE_URL` en el proyecto.
 
 ---
 
@@ -19,11 +20,11 @@ Cuando exista dominio propio (ej. `www.autosla15.com`), se configurará en Verce
 
 ### Acceso
 
-1. Abrir **https://autos-la-15.vercel.app/studio**
+1. Abrir **https://autos-la-15.pages.dev/studio**
 2. Iniciar sesión con la cuenta de Sanity que el equipo haya invitado al proyecto.
 3. Si no hay acceso, pedir una invitación al administrador del proyecto Sanity (`7mz74qpp`).
 
-Si aparece la pantalla **“Connect this Studio to your project”** en producción, el administrador debe **Registrar studio** (o ejecutar una vez `npx sanity@latest deploy --external --url https://autos-la-15.vercel.app/studio` desde el repo). También hace falta el origen CORS `https://autos-la-15.vercel.app` con credenciales en [Sanity Manage → API](https://www.sanity.io/manage).
+Si aparece la pantalla **“Connect this Studio to your project”** en producción, el administrador debe **Registrar studio** (o ejecutar una vez `npx sanity@latest deploy --external --url https://autos-la-15.pages.dev/studio` desde el repo). También hace falta el origen CORS `https://autos-la-15.pages.dev` con credenciales en [Sanity Manage → API](https://www.sanity.io/manage).
 
 ### Qué se puede editar
 
@@ -35,7 +36,7 @@ Si aparece la pantalla **“Connect this Studio to your project”** en producci
 
 1. Editar el documento en Studio.
 2. Pulsar **Publish** (no basta con guardar borrador).
-3. Esperar **1–3 minutos**: el sistema avisa a Vercel y se genera una nueva versión del sitio.
+3. Esperar **1–3 minutos**: el sistema avisa a Cloudflare Pages y se genera una nueva versión del sitio.
 4. Actualizar la página en el navegador (si no se ve el cambio, probar recarga forzada o ventana privada).
 
 ### WhatsApp
@@ -56,29 +57,33 @@ Los botones verdes y las consultas por vehículo usan los números y mensajes co
 
 ### Arquitectura breve
 
-- **Frontend:** Astro (sitio estático) en Vercel, proyecto **`autos-la-15`**.
+- **Frontend:** Astro (sitio estático) en Cloudflare Pages, proyecto **`autos-la-15`**.
 - **CMS:** Sanity, proyecto **`7mz74qpp`**, dataset **`production`**.
 - **Studio:** embebido en `/studio` (misma app que el sitio).
-- **Actualización automática:** webhook en Sanity → deploy hook en Vercel (`sanity-cms-rebuild`, rama **`main`**) → `npm run build` en Vercel.
+- **Actualización automática:** webhook en Sanity → deploy hook en Pages (`sanity-cms-rebuild`, rama **`main`**) → `npm run build` en Cloudflare.
 
 ### Cuentas y permisos
 
 | Sistema | Recurso | Notas |
 |---------|---------|--------|
 | **GitHub** | `Furda/autos-la-15` | Rama **`main`** = producción. Cambios vía ramas feature + PR a `main`. |
-| **Vercel** | `autos-la-15` | Production branch: **`main`**. Env: `SANITY_PROJECT_ID`, `SANITY_DATASET`, `SANITY_API_VERSION`, `PUBLIC_SITE_URL`. |
+| **Cloudflare Pages** | `autos-la-15` | Production branch: **`main`**. Env: `SANITY_PROJECT_ID`, `SANITY_DATASET`, `SANITY_API_VERSION`, `PUBLIC_SITE_URL`, `NODE_VERSION=22`. |
+| **Vercel (legacy)** | `autos-la-15` | Opcional: redirigir o pausar tras corte con el cliente. |
 | **Sanity** | `7mz74qpp` | Invitar editores en [sanity.io/manage](https://www.sanity.io/manage). Tokens de escritura solo en entornos locales/CI, no en el repo. |
 
-### Variables de entorno (Vercel)
+### Variables de entorno (Cloudflare Pages)
 
-Ya configuradas en **Production** y **Preview**:
+Configuradas en **Production** y **Preview** (tipo Text):
 
 - `SANITY_PROJECT_ID=7mz74qpp`
 - `SANITY_DATASET=production`
 - `SANITY_API_VERSION=2026-09-21`
-- `PUBLIC_SITE_URL=https://autos-la-15.vercel.app`
+- `PUBLIC_SITE_URL=https://autos-la-15.pages.dev`
+- `NODE_VERSION=22`
 
-Al cambiar el dominio final, actualizar `PUBLIC_SITE_URL`, añadir CORS + volver a registrar el Studio con la nueva URL (`sanity deploy --external --url https://<dominio>/studio`), y redeploy en Vercel.
+No añadir aquí `SANITY_TOKEN` ni `PAGES_DEPLOY_HOOK_URL` (solo en `.env` local).
+
+Al cambiar el dominio final, actualizar `PUBLIC_SITE_URL`, añadir CORS + volver a registrar el Studio con la nueva URL (`sanity deploy --external --url https://<dominio>/studio`), y redeploy en Pages.
 
 ### Desarrollo local
 
@@ -95,9 +100,10 @@ Semilla inicial (solo si hace falta repoblar): `npm run seed:sanity` (requiere `
 
 ### Webhook / deploy hook (referencia)
 
-- Vercel deploy hook: **`sanity-cms-rebuild`** → rama `main`.
-- Sanity webhook: **Vercel production rebuild (CMS publish)** — documentos `car`, `siteSettings` y `homePage` (actualizar el filtro en Sanity Manage si el webhook ya existía con la lista antigua).
-- Reconfiguración: `node --env-file=.env scripts/setup-cms-redeploy-webhook.mjs` (requiere `VERCEL_DEPLOY_HOOK_URL` en `.env` local).
+- Pages deploy hook: **`sanity-cms-rebuild`** → rama `main`.
+- Sanity webhook: **Production rebuild (CMS publish)** — documentos `car`, `siteSettings` y `homePage` (Página de inicio).
+- Reconfiguración: `node --env-file=.env scripts/setup-cms-redeploy-webhook.mjs` (requiere `PAGES_DEPLOY_HOOK_URL` en `.env` local).
+- Solo filtro: `node --env-file=.env scripts/sync-cms-webhook-filter.mjs`
 
 ### Sitio provisional
 
@@ -107,9 +113,9 @@ Semilla inicial (solo si hace falta repoblar): `npm run seed:sanity` (requiere `
 
 ### Verificación rápida post-cambio
 
-- https://autos-la-15.vercel.app/ — inicio
-- https://autos-la-15.vercel.app/studio — Studio
-- https://autos-la-15.vercel.app/sitemap-index.xml — sitemap
+- https://autos-la-15.pages.dev/ — inicio
+- https://autos-la-15.pages.dev/studio — Studio
+- https://autos-la-15.pages.dev/sitemap-index.xml — sitemap
 
 ---
 

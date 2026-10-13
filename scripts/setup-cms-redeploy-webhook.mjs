@@ -1,23 +1,33 @@
 /**
- * Creates a Sanity project webhook that POSTs to a Vercel deploy hook URL.
+ * Creates or updates a Sanity project webhook that POSTs to a hosting deploy hook URL.
  *
  * Required env (use --env-file=.env locally; never commit secrets):
- *   SANITY_PROJECT_ID, SANITY_TOKEN, VERCEL_DEPLOY_HOOK_URL
+ *   SANITY_PROJECT_ID, SANITY_TOKEN, PAGES_DEPLOY_HOOK_URL
  *
  * Usage:
  *   node --env-file=.env scripts/setup-cms-redeploy-webhook.mjs
  */
 const projectId = process.env.SANITY_PROJECT_ID;
 const token = process.env.SANITY_TOKEN;
-const deployHookUrl = process.env.VERCEL_DEPLOY_HOOK_URL?.trim();
-const hookName = 'Vercel production rebuild (CMS publish)';
+const deployHookUrl = (
+  process.env.PAGES_DEPLOY_HOOK_URL ?? process.env.VERCEL_DEPLOY_HOOK_URL
+)?.trim();
+const hookName = 'Production rebuild (CMS publish)';
+const legacyHookNamesToDelete = ['Vercel production rebuild (CMS publish)'];
+const documentFilter = '_type in ["car", "siteSettings", "homePage"]';
 
-const required = ['SANITY_PROJECT_ID', 'SANITY_TOKEN', 'VERCEL_DEPLOY_HOOK_URL'];
+const required = ['SANITY_PROJECT_ID', 'SANITY_TOKEN'];
 for (const key of required) {
   if (!process.env[key]?.trim()) {
     console.error(`Missing ${key}. Set it in .env (see scripts/setup-cms-redeploy-webhook.mjs).`);
     process.exit(1);
   }
+}
+if (!deployHookUrl) {
+  console.error(
+    'Missing PAGES_DEPLOY_HOOK_URL. Create a Cloudflare Pages deploy hook (branch main) and add the URL to .env.',
+  );
+  process.exit(1);
 }
 
 const hooksApiVersion = process.env.SANITY_HOOKS_API_VERSION ?? 'v2021-06-07';
@@ -31,13 +41,27 @@ if (!listResponse.ok) {
   process.exit(1);
 }
 
-const documentFilter = '_type in ["car", "siteSettings", "homePage"]';
+const hooks = await listResponse.json();
+
+for (const legacyName of legacyHookNamesToDelete) {
+  const legacy = hooks.find((hook) => hook.name === legacyName);
+  if (!legacy) continue;
+  const del = await fetch(`${hooksBase}/${legacy.id}`, {
+    method: 'DELETE',
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  if (del.ok) {
+    console.log(`Deleted legacy webhook id=${legacy.id} name="${legacy.name}"`);
+  } else {
+    console.warn(`Could not delete legacy webhook "${legacyName}" (${del.status})`);
+  }
+}
 
 const webhookBody = {
   name: hookName,
   url: deployHookUrl,
   dataset: process.env.SANITY_DATASET ?? 'production',
-  description: 'Triggers Vercel rebuild when documents are published in Sanity.',
+  description: 'Triggers a production rebuild when car, siteSettings, or homePage documents are published.',
   type: 'document',
   apiVersion: hooksApiVersion,
   rule: {
@@ -48,22 +72,22 @@ const webhookBody = {
   httpMethod: 'POST',
 };
 
-const existing = await listResponse.json();
-const already = existing.find((hook) => hook.name === hookName);
-if (already) {
-  const currentFilter = already.rule?.filter;
-  if (currentFilter === documentFilter) {
-    console.log(`Webhook already up to date id=${already.id} name="${already.name}"`);
+const existing = hooks.find((hook) => hook.name === hookName);
+if (existing) {
+  const urlMatches = existing.url === deployHookUrl;
+  const filterMatches = existing.rule?.filter === documentFilter;
+  if (urlMatches && filterMatches) {
+    console.log(`Webhook already up to date id=${existing.id} name="${existing.name}"`);
     process.exit(0);
   }
 
-  const response = await fetch(`${hooksBase}/${already.id}`, {
+  const response = await fetch(`${hooksBase}/${existing.id}`, {
     method: 'PUT',
     headers: {
       Authorization: `Bearer ${token}`,
       'Content-Type': 'application/json',
     },
-    body: JSON.stringify({ ...already, ...webhookBody, id: already.id }),
+    body: JSON.stringify({ ...existing, ...webhookBody, id: existing.id }),
   });
 
   if (!response.ok) {
@@ -71,7 +95,7 @@ if (already) {
     process.exit(1);
   }
 
-  console.log(`Updated Sanity webhook id=${already.id} filter="${documentFilter}"`);
+  console.log(`Updated Sanity webhook id=${existing.id} name="${hookName}"`);
   process.exit(0);
 }
 
@@ -88,8 +112,7 @@ if (!response.ok) {
   const text = await response.text();
   if (response.status === 409 && text.includes('already exists')) {
     console.log(`Webhook "${hookName}" already exists on this project.`);
-    console.log(`If homePage edits should trigger rebuilds, set the filter in Sanity Manage to:\n  ${documentFilter}`);
-    console.log('Or run: node --env-file=.env scripts/sync-cms-webhook-filter.mjs (requires a token that can list/update hooks).');
+    console.log(`Run: node --env-file=.env scripts/sync-cms-webhook-filter.mjs`);
     process.exit(0);
   }
   console.error(`Sanity webhook create failed (${response.status}): ${text}`);
