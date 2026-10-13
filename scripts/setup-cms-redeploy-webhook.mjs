@@ -9,9 +9,7 @@
  */
 const projectId = process.env.SANITY_PROJECT_ID;
 const token = process.env.SANITY_TOKEN;
-const deployHookUrl = (
-  process.env.PAGES_DEPLOY_HOOK_URL ?? process.env.VERCEL_DEPLOY_HOOK_URL
-)?.trim();
+const deployHookUrl = process.env.PAGES_DEPLOY_HOOK_URL?.trim();
 const hookName = 'Production rebuild (CMS publish)';
 const legacyHookNamesToDelete = ['Vercel production rebuild (CMS publish)'];
 const documentFilter = '_type in ["car", "siteSettings", "homePage"]';
