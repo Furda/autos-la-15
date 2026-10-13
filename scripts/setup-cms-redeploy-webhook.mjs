@@ -4,9 +4,15 @@
  * Required env (use --env-file=.env locally; never commit secrets):
  *   SANITY_PROJECT_ID, SANITY_TOKEN, PAGES_DEPLOY_HOOK_URL
  *
+ * PAGES_DEPLOY_HOOK_URL must be a Pages hook:
+ *   https://api.cloudflare.com/client/v4/pages/webhooks/deploy_hooks/<uuid>
+ * (Recreate the hook in Cloudflare if the Pages project was deleted/recreated.)
+ *
  * Usage:
  *   node --env-file=.env scripts/setup-cms-redeploy-webhook.mjs
  */
+import { execFileSync } from 'node:child_process';
+
 const projectId = process.env.SANITY_PROJECT_ID;
 const token = process.env.SANITY_TOKEN;
 const deployHookUrl = process.env.PAGES_DEPLOY_HOOK_URL?.trim();
@@ -109,8 +115,32 @@ const response = await fetch(hooksBase, {
 if (!response.ok) {
   const text = await response.text();
   if (response.status === 409 && text.includes('already exists')) {
-    console.log(`Webhook "${hookName}" already exists on this project.`);
-    console.log(`Run: node --env-file=.env scripts/sync-cms-webhook-filter.mjs`);
+    try {
+      execFileSync('npx', ['sanity', 'hooks', 'delete', hookName], {
+        encoding: 'utf8',
+        stdio: 'inherit',
+        env: process.env,
+      });
+    } catch {
+      console.error(
+        `Webhook "${hookName}" exists but could not be replaced automatically. Run: npx sanity hooks delete "${hookName}"`,
+      );
+      process.exit(1);
+    }
+    const retry = await fetch(hooksBase, {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(webhookBody),
+    });
+    if (!retry.ok) {
+      console.error(`Sanity webhook create failed (${retry.status}): ${await retry.text()}`);
+      process.exit(1);
+    }
+    const hook = await retry.json();
+    console.log(`Created Sanity webhook id=${hook.id} name="${hook.name}"`);
     process.exit(0);
   }
   console.error(`Sanity webhook create failed (${response.status}): ${text}`);
