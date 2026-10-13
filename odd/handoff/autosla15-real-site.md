@@ -111,6 +111,14 @@ Semilla inicial (solo si hace falta repoblar): `npm run seed:sanity` (requiere `
 - Proyecto Vercel **separado** del real.
 - Plan sugerido: mostrar el sitio real al cliente → acordar fecha de corte → actualizar enlaces/marketing → opcionalmente redirigir el dominio provisional.
 
+
+### Retirada de Vercel (manual, fuera del repo)
+
+1. Vercel → proyecto **utos-la-15**: eliminar deploy hooks antiguos si siguen activos.
+2. Quitar variables de entorno del proyecto (ya no se usan para producción).
+3. Pausar o eliminar el proyecto cuando el cliente no necesite https://autos-la-15.vercel.app como respaldo.
+4. Opcional: borrar carpeta local .vercel si existía tras ercel link (sigue ignorada en .gitignore).
+
 ### Verificación rápida post-cambio
 
 - https://autos-la-15.pages.dev/ — inicio
@@ -133,10 +141,10 @@ Acordar con el cliente antes de construir:
 
 ## Contacto del proyecto
 
-Registrar aquí quién tiene acceso de administrador a Sanity, Vercel y GitHub (nombres/correos internos; no incluir tokens en este archivo).
+Registrar aquí quién tiene acceso de administrador a Sanity, Cloudflare y GitHub (nombres/correos internos; no incluir tokens en este archivo).
 
 | Rol | Nombre | Notas |
 |-----|--------|--------|
 | Admin Sanity | _pendiente_ | |
-| Admin Vercel | _pendiente_ | |
+| Admin Cloudflare (Pages) | _pendiente_ | |
 | Admin GitHub | _pendiente_ | |
