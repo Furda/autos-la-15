@@ -67,7 +67,7 @@ Los botones verdes y las consultas por vehículo usan los números y mensajes co
 | Sistema | Recurso | Notas |
 |---------|---------|--------|
 | **GitHub** | `Furda/autos-la-15` | Rama **`main`** = producción. Cambios vía ramas feature + PR a `main`. |
-| **Cloudflare Pages** | `autos-la-15` | Production branch: **`main`**. Env: `SANITY_PROJECT_ID`, `SANITY_DATASET`, `SANITY_API_VERSION`, `PUBLIC_SITE_URL`, `NODE_VERSION=22`. |
+| **Cloudflare Pages** | `autos-la-15` | Cuenta cliente **`4d7b9cf1dfdca6bf57d5e857bc381f8d`** (Cristian). Production branch: **`main`**. Build env (Git + deploy hooks): ver abajo. |
 | **Vercel (legacy)** | `autos-la-15` | Opcional: redirigir o pausar tras corte con el cliente. |
 | **Sanity** | `7mz74qpp` | Invitar editores en [sanity.io/manage](https://www.sanity.io/manage). Tokens de escritura solo en entornos locales/CI, no en el repo. |
 
@@ -83,7 +83,28 @@ Configuradas en **Production** y **Preview** (tipo Text):
 
 No añadir aquí `SANITY_TOKEN` ni `PAGES_DEPLOY_HOOK_URL` (solo en `.env` local).
 
+Estas variables viven en la **configuración de build de Pages (Git)**, no en “Runtime variables” del Worker. Si el panel **Builds → Variables and secrets** aparece vacío pero los despliegues por Git o deploy hook funcionan, la fuente de verdad puede ser la API de Pages / despliegues antiguos; duplicar aquí las mismas cinco variables evita confusiones y fallos en rutas **Workers Builds**.
+
 Al cambiar el dominio final, actualizar `PUBLIC_SITE_URL`, añadir CORS + volver a registrar el Studio con la nueva URL (`sanity deploy --external --url https://<dominio>/studio`), y redeploy en Pages.
+
+### Panel Cloudflare — higiene (cuenta cliente)
+
+1. **Despliegues que importan:** **Workers & Pages → autos-la-15 → Deployments**. Éxito con trigger **Git push**, **Deploy hook** o **Retry** = producción OK.
+2. **Build (Git):** **Settings → Builds → Production** — `npm run build`, salida **`dist`**, rama **`main`**. No usar `npx wrangler deploy` solo (sitio estático Astro sin Worker); eso provoca “Last build failed” en la vista Workers Builds.
+3. **Variables de build (Production y Preview):** en **Builds → Variables and secrets**, añadir las cinco variables de la tabla anterior (Text). Opcional: duplicar en Preview.
+4. **Runtime variables:** pueden quedar vacías; el sitio es estático.
+5. **Deploy hook CMS:** **Settings → Builds → Deploy hooks** (o **Trigger events**) — `sanity-cms-rebuild`, rama `main`. URL formato `.../pages/webhooks/deploy_hooks/<uuid>`. Tras **recrear el proyecto Pages**, crear un hook nuevo y actualizar `.env` + `node --env-file=.env scripts/setup-cms-redeploy-webhook.mjs`.
+6. **Cuenta Furdac14:** el proyecto `autos-la-15` personal fue eliminado; producción solo en la cuenta cliente.
+
+### Sanity — CORS y Studio (verificado)
+
+En [Sanity Manage → API → CORS origins](https://www.sanity.io/manage):
+
+- **Managed origins:** debe figurar **`https://autos-la-15.pages.dev`** (Allowed) tras desplegar Studio en producción.
+- Entradas manuales **Superseded** con el mismo host son redundantes; opcional borrarlas.
+- **`https://autos-la-15.vercel.app`:** legacy; se puede quitar cuando Vercel deje de usarse.
+
+Comprobación funcional (una vez): abrir **/studio**, iniciar sesión, editar y **Publish** → en Cloudflare, nuevo deployment con trigger **Deploy hook** en ~1–3 min.
 
 ### Desarrollo local
 
@@ -111,13 +132,12 @@ Semilla inicial (solo si hace falta repoblar): `npm run seed:sanity` (requiere `
 - Proyecto Vercel **separado** del real.
 - Plan sugerido: mostrar el sitio real al cliente → acordar fecha de corte → actualizar enlaces/marketing → opcionalmente redirigir el dominio provisional.
 
-
 ### Retirada de Vercel (manual, fuera del repo)
 
-1. Vercel → proyecto **utos-la-15**: eliminar deploy hooks antiguos si siguen activos.
+1. Vercel → proyecto **autos-la-15** (si aún existe): eliminar deploy hooks antiguos si siguen activos.
 2. Quitar variables de entorno del proyecto (ya no se usan para producción).
 3. Pausar o eliminar el proyecto cuando el cliente no necesite https://autos-la-15.vercel.app como respaldo.
-4. Opcional: borrar carpeta local .vercel si existía tras ercel link (sigue ignorada en .gitignore).
+4. Opcional: borrar carpeta local `.vercel` si existía tras `vercel link` (sigue ignorada en `.gitignore`).
 
 ### Verificación rápida post-cambio
 
@@ -146,5 +166,5 @@ Registrar aquí quién tiene acceso de administrador a Sanity, Cloudflare y GitH
 | Rol | Nombre | Notas |
 |-----|--------|--------|
 | Admin Sanity | _pendiente_ | |
-| Admin Cloudflare (Pages) | _pendiente_ | |
+| Admin Cloudflare (Pages, cuenta cliente) | _pendiente_ | |
 | Admin GitHub | _pendiente_ | |
