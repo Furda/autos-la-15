@@ -10,11 +10,11 @@ Su sitio web ya está publicado en internet. Esta guía explica **cómo verlo** 
 |-----|-----------|
 | **Sitio web** (lo que ven sus clientes) | https://autosla15.com |
 | **Panel de edición** (donde usted cambia contenido) | https://autosla15.com/studio |
-| **Información técnica** (para desarrolladores) | https://github.com/URCAStudios/autos-la-15 |
+| **Código del proyecto** (repositorio público) | https://github.com/URCAStudios/autos-la-15 |
 
 Si escribe **www.autosla15.com**, llegará igual al sitio principal.
 
-En GitHub, el archivo **README.md** tiene los detalles técnicos del proyecto (hosting, dominio, código). **Usted no necesita usarlo** para el día a día; sirve si trabaja con un programador o con su desarrollador.
+El enlace de **GitHub** es un repositorio **público**: puede abrirlo en el navegador y leer el archivo **README.md** (hosting en Cloudflare, dominio, instrucciones técnicas) **sin** contraseña ni cuenta de GitHub. **Usted no necesita usarlo** en el día a día; sirve si trabaja con un programador, si un técnico pide referencia del proyecto, o si quiere comprobar que el código está disponible para consulta.
 
 ---
 
@@ -65,7 +65,7 @@ Los botones verdes del sitio usan los números y mensajes que configure en el pa
 
 Para dudas sobre el sitio o el panel de edición, contacte al desarrollador del proyecto Autos La 15.
 
-Si alguien de su equipo necesita información técnica, comparta el enlace de GitHub de la tabla anterior y el archivo **README.md**.
+Si alguien de su equipo necesita información técnica, comparta el enlace público de GitHub de la tabla anterior; dentro del repositorio, abra **README.md**.
 
 ---
 
