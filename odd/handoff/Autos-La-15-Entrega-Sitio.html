@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Entrega del sitio — Autos La 15</title>
+  <style>
+    :root {
+      --bg-color: #121212;
+      --card-bg: #1a1a1a;
+      --card-border: #2a2a2a;
+      --accent-green: #ccff00;
+      --text-main: #f0f0f0;
+      --text-muted: #a0a0a0;
+      --line-color: #262626;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    @page { size: A4; margin: 0; }
+    html {
+      background: var(--bg-color);
+      -webkit-print-color-adjust: exact;
+      print-color-adjust: exact;
+    }
+    body {
+      background: var(--bg-color);
+      color: var(--text-main);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      font-size: 11pt;
+      line-height: 1.5;
+      -webkit-print-color-adjust: exact;
+      print-color-adjust: exact;
+    }
+    .container {
+      max-width: 820px;
+      margin: 0 auto;
+      padding: 32px 48px 40px;
+      background: var(--bg-color);
+    }
+    .subtitle-top {
+      color: var(--accent-green);
+      font-size: 0.72rem;
+      text-transform: uppercase;
+      letter-spacing: 1.2px;
+      font-weight: 600;
+      margin-bottom: 10px;
+    }
+    h1 {
+      font-size: 1.85rem;
+      font-weight: 700;
+      margin-bottom: 10px;
+      color: #fff;
+      line-height: 1.15;
+    }
+    .intro-text {
+      color: var(--text-muted);
+      font-size: 0.95rem;
+      margin-bottom: 22px;
+      padding-bottom: 18px;
+      border-bottom: 1px solid var(--line-color);
+    }
+    .intro-text strong { color: var(--text-main); }
+    h2 {
+      font-size: 1.15rem;
+      font-weight: 700;
+      margin: 28px 0 10px;
+      color: #fff;
+      page-break-after: avoid;
+    }
+    p { margin: 0 0 10px; color: var(--text-main); font-size: 0.92rem; }
+    strong { font-weight: 600; color: var(--text-main); }
+    ul, ol { margin: 0 0 12px; padding-left: 22px; font-size: 0.92rem; }
+    li { margin-bottom: 6px; color: var(--text-main); }
+    li::marker { color: var(--accent-green); }
+    a { color: var(--accent-green); word-break: break-all; }
+    .callout {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-left: 4px solid var(--accent-green);
+      border-radius: 8px;
+      padding: 18px 20px;
+      margin: 16px 0 22px;
+      page-break-inside: avoid;
+    }
+    .callout-label {
+      display: block;
+      color: var(--accent-green);
+      font-size: 0.78rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.6px;
+      margin-bottom: 8px;
+    }
+    .callout p { margin: 0; color: var(--text-muted); font-size: 0.9rem; }
+    .callout p strong { color: var(--text-main); }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 10px 0 18px;
+      font-size: 0.88rem;
+      page-break-inside: avoid;
+      border-top: 1px solid var(--line-color);
+    }
+    th, td {
+      padding: 11px 0;
+      text-align: left;
+      vertical-align: top;
+      border: none;
+      border-bottom: 1px solid var(--line-color);
+    }
+    th { color: var(--accent-green); font-weight: 600; }
+    td { color: var(--text-muted); }
+    td strong { color: var(--text-main); }
+    .note { font-size: 0.82rem; color: var(--text-muted); }
+    .doc-footer {
+      margin-top: 36px;
+      padding-top: 16px;
+      border-top: 1px solid var(--line-color);
+      font-size: 0.82rem;
+      color: var(--text-muted);
+      text-align: center;
+    }
+    @media print {
+      html, body { background: var(--bg-color); }
+      .container { padding: 28px 44px 36px; }
+      a { color: var(--accent-green); text-decoration: underline; }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+
+    <div class="subtitle-top">Autos La 15 · Su sitio web</div>
+    <h1>Guía para usted</h1>
+    <p class="intro-text">Cómo ver su página en internet y actualizar vehículos y textos.</p>
+
+    <div class="callout">
+      <span class="callout-label">En pocas palabras</span>
+      <p>Su página pública es <strong>autosla15.com</strong>. Para cambiar carros, precios o textos, use el <strong>panel de edición</strong> en la dirección de abajo. No necesita instalar programas ni entrar a sitios técnicos.</p>
+    </div>
+
+    <h2>1. Sus enlaces</h2>
+    <table>
+      <thead><tr><th>Qué</th><th>Dirección</th></tr></thead>
+      <tbody>
+        <tr><td><strong>Sitio web</strong> (para sus clientes)</td><td><a href="https://autosla15.com">https://autosla15.com</a></td></tr>
+        <tr><td><strong>Panel de edición</strong> (solo para usted)</td><td><a href="https://autosla15.com/studio">https://autosla15.com/studio</a></td></tr>
+        <tr><td><strong>Información técnica</strong> (para desarrolladores)</td><td><a href="https://github.com/URCAStudios/autos-la-15">https://github.com/URCAStudios/autos-la-15</a></td></tr>
+      </tbody>
+    </table>
+    <p class="note">Si escribe www.autosla15.com, llegará al mismo sitio principal. En GitHub, el archivo <strong>README.md</strong> explica detalles técnicos del proyecto; usted no necesita usarlo para el día a día.</p>
+
+    <h2>2. Cómo entrar al panel</h2>
+    <ol>
+      <li>Abra <strong>https://autosla15.com/studio</strong> en Chrome, Edge o Safari.</li>
+      <li>Entre con el <strong>correo y contraseña</strong> que le dio el equipo.</li>
+      <li>Si no puede entrar, pida una <strong>invitación</strong> al administrador o al desarrollador.</li>
+    </ol>
+    <p class="note">Si aparece un mensaje en inglés sobre “conectar” el panel, avise al desarrollador.</p>
+
+    <h2>3. Qué puede cambiar</h2>
+    <ul>
+      <li><strong>Vehículos:</strong> nombre, año, precio, descripción, foto, disponibilidad, mensaje de WhatsApp.</li>
+      <li><strong>Datos del negocio:</strong> textos de inicio, contacto, horarios, direcciones, redes sociales.</li>
+    </ul>
+
+    <h2>4. Publicar cambios en la web</h2>
+    <ol>
+      <li>Edite en el panel.</li>
+      <li>Pulse <strong>Publish</strong> (Publicar). Guardar borrador <strong>no</strong> actualiza la página pública.</li>
+      <li>Espere <strong>1 a 3 minutos</strong> y actualice <strong>autosla15.com</strong> en el navegador.</li>
+    </ol>
+
+    <div class="callout">
+      <span class="callout-label">WhatsApp</span>
+      <p>Los botones verdes usan lo que configure en el panel. Después de un cambio, <strong>publíquelo</strong> y pruebe el enlace en el celular.</p>
+    </div>
+
+    <h2>5. Si algo no funciona</h2>
+    <table>
+      <thead><tr><th>Situación</th><th>Qué hacer</th></tr></thead>
+      <tbody>
+        <tr><td>No veo el cambio</td><td>¿Pulsó <strong>Publish</strong>? ¿Esperó unos minutos? Recargue la página.</td></tr>
+        <tr><td>No puedo entrar al panel</td><td>Pida invitación o contacte al desarrollador.</td></tr>
+        <tr><td>Error al subir foto</td><td>JPG, PNG o WebP; tamaño moderado; reintente.</td></tr>
+        <tr><td>Pantalla confusa</td><td>Captura de pantalla al desarrollador. No pulse Eliminar / Delete.</td></tr>
+      </tbody>
+    </table>
+
+    <h2>6. Ayuda</h2>
+    <p>Para dudas sobre el sitio o el panel, contacte al desarrollador del proyecto Autos La 15.</p>
+    <p class="note" style="margin-top: 12px;">Si un programador o su equipo técnico necesita más información (hosting, dominio, código), indíquele la página de GitHub de la sección 1 y el archivo <strong>README.md</strong>.</p>
+
+    <p class="doc-footer">Autos La 15 · Guía para el cliente · Octubre 2026</p>
+
+  </div>
+</body>
+</html>

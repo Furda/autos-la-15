@@ -1,60 +1,88 @@
-# Autos La 15 real site
+# Autos La 15 — sitio en producción
 
-Production site: static **Astro** app with embedded **Sanity Studio** at `/studio`. The `provisional/` directory is the legacy fallback and is not part of this build.
+Sitio estático **Astro 6** con **Sanity Studio** embebido en `/studio`. Build: `npm run build` → `dist/`.
 
-- **Live:** https://autos-la-15.pages.dev  
-- **Handoff (client + ops):** [odd/handoff/autosla15-real-site.md](odd/handoff/autosla15-real-site.md)  
-- **Build progress / evidence:** [odd/tasks/autosla15-real-site.md](odd/tasks/autosla15-real-site.md)
+| Entorno | URL |
+|---------|-----|
+| **Producción (canónica)** | https://autosla15.com |
+| **Studio** | https://autosla15.com/studio |
+| **Pages (respaldo)** | https://autos-la-15.pages.dev |
 
-## Branch workflow
+Guía para el cliente (sin detalle técnico): [odd/handoff/autosla15-real-site.md](odd/handoff/autosla15-real-site.md) · PDF: [odd/handoff/Autos-La-15-Entrega-Sitio.pdf](odd/handoff/Autos-La-15-Entrega-Sitio.pdf)
 
-| Branch | Role |
-|--------|------|
-| **`main`** | Production. Cloudflare Pages deploys from `main`. |
-| **`feat/*`** (or other) | Development. Open a **PR into `main`**; merge after review and checks. |
+## Hosting y dominio
 
-Do not commit `.env` or tokens.
+- **Cloudflare Pages** — proyecto `autos-la-15`, rama de producción `main` (Git: `URCAStudios/autos-la-15`).
+- **Cuenta cliente** — account ID `4d7b9cf1dfdca6bf57d5e857bc381f8d` (facturación del dominio en esa cuenta).
+- **Dominio** — `autosla15.com` (apex canónico); `www` → redirect 301 al apex.
+- Guías PDF onboarding cliente: `odd/handoff/Cloudflare-Autos-La-15-Guia-Cliente.pdf`, `odd/handoff/Cloudflare-Autos-La-15-Guia-Dominio-Cliente.pdf`.
 
-## Local setup
+## Variables de entorno (Pages — Production y Preview)
 
-1. Copy `.env.example` to `.env` and fill in Sanity values (including `SANITY_TOKEN` for seed/scripts only).
-2. `npm install`
-3. `npm run dev` — site at http://localhost:4320 (or the port Astro prints); Studio at `/studio`.
-4. Before release checks: `npm run check` and `npm run build`.
+| Variable | Valor |
+|----------|--------|
+| `SANITY_PROJECT_ID` | `7mz74qpp` |
+| `SANITY_DATASET` | `production` |
+| `SANITY_API_VERSION` | `2026-09-21` |
+| `NODE_VERSION` | `22` |
+| `PUBLIC_SITE_URL` | `https://autosla15.com` |
 
-For a production-like local build, set `PUBLIC_SITE_URL` (see `.env.example`).
+Tras cambiar la URL pública: actualizar `PUBLIC_SITE_URL`, CORS + `sanity deploy --external`, redeploy Pages.
 
-Node **22+** for build (see `.node-version`; Cloudflare Pages uses `NODE_VERSION=22`).
+## Sanity (producción)
 
-## Scripts
-
-| Command | Purpose |
-|---------|---------|
-| `npm run dev` | Astro dev server |
-| `npm run check` | `astro check` (types) |
-| `npm run build` | Static output to `dist/` |
-| `npm run seed:sanity` | One-time / safe re-run seed (`SANITY_TOKEN` required) |
-
-## Sanity Studio on production (one-time per URL)
-
-Embedded Studio at `/studio` must be **registered** with the Sanity project and allowed in **CORS** (origin with credentials). From the repo (logged-in Sanity CLI):
+CORS con credenciales: `https://autosla15.com` (opcional mantener `https://autos-la-15.pages.dev` para pruebas).
 
 ```bash
-npx sanity cors add https://autos-la-15.pages.dev --credentials -p 7mz74qpp -y
-npx sanity@latest deploy --external --url https://autos-la-15.pages.dev/studio -y
+npx sanity cors add https://autosla15.com --credentials -p 7mz74qpp -y
+npx sanity@6.15.0 deploy --external --url https://autosla15.com/studio -y
 ```
 
-Repeat with the new origin/URL when the public domain changes. See `sanity.cli.ts` (`basePath: '/studio'`).
+`basePath`: `/studio` en `sanity.cli.ts`.
 
-## CMS redeploy wiring
+## CMS → redeploy
 
-Published edits to `car`, `siteSettings`, and `homePage` (Página de inicio) trigger a Cloudflare Pages rebuild via Sanity webhook → Pages deploy hook. Ops details are in the handoff doc. To create or update the Sanity webhook locally:
+Publicar `car` o `siteSettings` en Sanity dispara un webhook → **Cloudflare Pages deploy hook** (rama `main`).
+
+Recrear webhook localmente (no commitear secretos):
 
 ```bash
-# PAGES_DEPLOY_HOOK_URL in .env only — never commit
+# SANITY_TOKEN + URL del deploy hook de Pages en .env — ver scripts/setup-cms-redeploy-webhook.mjs
 node --env-file=.env scripts/setup-cms-redeploy-webhook.mjs
 ```
 
-## Cloudflare Pages
+Requiere `PAGES_DEPLOY_HOOK_URL` en `.env` (URL del deploy hook de **Pages**, rama `main`).
 
-Project name: **`autos-la-15`**. Build: `npm run build`, output `dist/`, production branch `main`. Configure env vars in the Pages dashboard (see handoff doc).
+## Desarrollo local
+
+1. `cp .env.example .env` — `SANITY_*`, `SANITY_TOKEN` (scripts), `PUBLIC_SITE_URL` opcional.
+2. `npm install`
+3. `npm run dev` — Studio en `/studio`
+4. `npm run check && npm run build`
+
+| Script | Uso |
+|--------|-----|
+| `npm run dev` | Servidor de desarrollo |
+| `npm run check` | `astro check` |
+| `npm run build` | Salida estática `dist/` |
+| `npm run seed:sanity` | Semilla CMS (`SANITY_TOKEN`) |
+
+## Rama y despliegue
+
+- **`main`** → producción (Pages).
+- Trabajo en ramas feature → PR a `main`.
+
+No commitear `.env` ni tokens.
+
+## Verificación rápida
+
+- https://autosla15.com/
+- https://autosla15.com/studio
+- https://autosla15.com/sitemap-index.xml
+- https://www.autosla15.com/ → apex
+
+## Regenerar PDF de entrega al cliente
+
+```bash
+node odd/handoff/render-handoff-pdf.mjs
+```
