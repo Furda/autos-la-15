@@ -15,6 +15,27 @@ toggle?.addEventListener('click', () => {
   toggle.setAttribute('aria-expanded', String(isOpen));
 });
 document.querySelectorAll('.main-nav a').forEach((link) => link.addEventListener('click', closeMenu));
+const scrollToTop = () => {
+  const target = document.getElementById('top');
+  if (!target) {
+    window.scrollTo({ top: 0, behavior: reducedMotion ? 'auto' : 'smooth' });
+    return;
+  }
+  target.scrollIntoView({ behavior: reducedMotion ? 'auto' : 'smooth', block: 'start' });
+};
+document.querySelectorAll('a[href="#top"]').forEach((link) => {
+  link.addEventListener('click', (event) => {
+    if (event.defaultPrevented || event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) {
+      return;
+    }
+    event.preventDefault();
+    closeMenu();
+    scrollToTop();
+    if (window.location.hash !== '#top') {
+      history.pushState(null, '', '#top');
+    }
+  });
+});
 document.addEventListener('keydown', (event) => {
   if (event.key === 'Escape') closeMenu();
 });
