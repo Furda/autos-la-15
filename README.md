@@ -12,7 +12,7 @@ Guía para el cliente (sin detalle técnico): [odd/handoff/autosla15-real-site.m
 
 ## Hosting y dominio
 
-- **Cloudflare Pages** — proyecto `autos-la-15`, rama de producción `main` (Git: `URCAStudios/autos-la-15`).
+- **Cloudflare Pages** — proyecto `autos-la-15`, rama de producción `main` (Git: repositorio **público** [URCAStudios/autos-la-15](https://github.com/URCAStudios/autos-la-15)).
 - **Cuenta cliente** — account ID `4d7b9cf1dfdca6bf57d5e857bc381f8d` (facturación del dominio en esa cuenta).
 - **Dominio** — `autosla15.com` (apex canónico); `www` → redirect 301 al apex.
 - Guías PDF onboarding cliente: `odd/handoff/Cloudflare-Autos-La-15-Guia-Cliente.pdf`, `odd/handoff/Cloudflare-Autos-La-15-Guia-Dominio-Cliente.pdf`.
