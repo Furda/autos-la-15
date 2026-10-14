@@ -241,7 +241,7 @@ const structuredData = {
   <body>
     <a class="skip-link" href="#main-content">Saltar al contenido</a>
 
-    <header class="site-header over-hero" id="top">
+    <header class="site-header over-hero">
       <div class="container header-inner">
         <a href="#top" class="brand" aria-label={`${brandName}, inicio`}>
           <img src={logoSrc} alt={logoAlt} class="brand-logo" width="40" height="40" />
@@ -265,7 +265,7 @@ const structuredData = {
     </header>
 
     <main id="main-content">
-      <section class="hero" aria-labelledby="hero-title">
+      <section class="hero" id="top" aria-labelledby="hero-title">
         <img class="hero-image" src={heroSrc} alt={heroAlt} width={fallbackHero.width} height={fallbackHero.height} fetchpriority="high" />
         <div class="hero-overlay" aria-hidden="true"></div>
         <div class="container hero-inner">
